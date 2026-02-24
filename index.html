@@ -3083,13 +3083,19 @@ function renderChart(containerId, lagnaRashi, grahas, getRashi, label) {
 // ---------------------------------------------------------------------------
 
 async function setDefaults() {
-  // Fallback: Bangalore, IST
+  // Fallback: use browser's own timezone and Bangalore coords
+  const browserOffsetMinutes = -new Date().getTimezoneOffset();
+  const padOffset = (m) => {
+    const sign = m >= 0 ? '+' : '-';
+    const abs  = Math.abs(m);
+    return sign + String(Math.floor(abs/60)).padStart(2,'0') + String(abs%60).padStart(2,'0');
+  };
   let geo = {
-    city:           'Bangalore',
-    latitude:        12.9716,
-    longitude:       77.5946,
-    utc_offset:     '+0530',   // ipapi.co format: "+0530" or "-0800"
-    timezone:       'Asia/Kolkata'
+    city:        'Bangalore',
+    country_name:'India',
+    latitude:     12.9716,
+    longitude:    77.5946,
+    utc_offset:   padOffset(browserOffsetMinutes)
   };
 
   try {
@@ -3107,22 +3113,21 @@ async function setDefaults() {
   const offsetMinutes = sign * (oh * 60 + om);
 
   // Local date/time at detected location
-  const now    = new Date();
-  const locMs  = now.getTime() + offsetMinutes * 60000;
-  const locDate = new Date(locMs);
-  const day    = locDate.getUTCDate();
-  const month  = locDate.getUTCMonth() + 1;
-  const year   = locDate.getUTCFullYear();
-  const hour   = locDate.getUTCHours();
-  const minute = locDate.getUTCMinutes();
+  const now     = new Date();
+  const locDate = new Date(now.getTime() + offsetMinutes * 60000);
+  const day     = locDate.getUTCDate();
+  const month   = locDate.getUTCMonth() + 1;
+  const year    = locDate.getUTCFullYear();
+  const hour    = locDate.getUTCHours();
+  const minute  = locDate.getUTCMinutes();
 
-  const lat = parseFloat(geo.latitude);
-  const lon = parseFloat(geo.longitude);
+  const lat   = parseFloat(geo.latitude);
+  const lon   = parseFloat(geo.longitude);
   const tzHr  = sign * oh;
   const tzMin = om;
 
   // Try to match detected location to a preset city; otherwise use custom
-  const select     = document.getElementById('inputCity');
+  const select      = document.getElementById('inputCity');
   const matchOption = [...select.options].find(o => {
     if (o.value === 'custom') return false;
     const [pLat, pLon] = o.value.split(',').map(Number);
@@ -3148,9 +3153,8 @@ async function setDefaults() {
     : `${geo.city}, ${geo.country_name || geo.country_code || ''}`.trim().replace(/,$/, '');
 
   const MONTHS = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
-  const tzLabel = geo.utc_offset ? `UTC${geo.utc_offset}` : '';
   document.getElementById('sb-meta').innerHTML =
-    `${day} ${MONTHS[month-1]} ${year} &nbsp;·&nbsp; ${String(hour).padStart(2,'0')}:${String(minute).padStart(2,'0')} ${tzLabel}<br>${cityName}`;
+    `${day} ${MONTHS[month-1]} ${year} &nbsp;·&nbsp; ${String(hour).padStart(2,'0')}:${String(minute).padStart(2,'0')}<br>${cityName}`;
 
   try {
     const r = PanchangaEngine.computeFullPanchanga({
