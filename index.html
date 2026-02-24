@@ -59,7 +59,6 @@
   --rose:           #fb7185;
   --green:          #4ade80;
 
-  --sidebar-w:      360px;
   --radius:         12px;
   --radius-sm:      8px;
 }
@@ -74,157 +73,6 @@ body {
   background: var(--bg-base);
   color: var(--text-primary);
   min-height: 100vh;
-}
-
-/* =====================================================================
-   APP LAYOUT
-===================================================================== */
-.app-layout {
-  display: flex;
-  min-height: 100vh;
-}
-
-/* =====================================================================
-   SIDEBAR
-===================================================================== */
-#sidebar {
-  width: var(--sidebar-w);
-  flex-shrink: 0;
-  position: sticky;
-  top: 0;
-  height: 100vh;
-  background: var(--bg-surface);
-  border-right: 1px solid var(--border);
-  display: flex;
-  flex-direction: column;
-  overflow-y: auto;
-  box-shadow: 2px 0 16px rgba(0,0,0,0.40);
-}
-
-.sidebar-header {
-  padding: 32px 28px 22px;
-  border-bottom: 1px solid var(--border);
-  background: linear-gradient(180deg, rgba(240,165,0,0.08) 0%, transparent 100%);
-}
-
-.logo-symbol {
-  font-family: 'EB Garamond', serif;
-  font-size: 44px;
-  color: var(--gold);
-  line-height: 1;
-  margin-bottom: 10px;
-  display: block;
-}
-
-.sidebar-header h1 {
-  font-family: 'EB Garamond', serif;
-  font-size: 24px;
-  font-weight: 600;
-  color: var(--text-primary);
-}
-
-.sidebar-header p {
-  font-size: 13px;
-  color: var(--text-muted);
-  margin-top: 4px;
-  letter-spacing: 0.5px;
-  text-transform: uppercase;
-}
-
-/* Sidebar day summary panel */
-.sidebar-summary {
-  padding: 22px 28px;
-  border-bottom: 1px solid var(--border);
-}
-
-.sidebar-summary .sum-label {
-  font-size: 12px;
-  font-weight: 600;
-  letter-spacing: 1px;
-  text-transform: uppercase;
-  color: var(--text-muted);
-  margin-bottom: 14px;
-}
-
-.sum-row {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  padding: 9px 0;
-  border-bottom: 1px solid rgba(45,55,72,0.90);
-  font-size: 15px;
-}
-.sum-row:last-child { border-bottom: none; }
-.sum-row .key  { color: var(--text-muted); font-size: 13px; font-weight: 500; }
-.sum-row .val  { color: var(--text-primary); font-weight: 600; text-align: right; max-width: 180px; }
-.sum-row .val.gold    { color: var(--gold); }
-.sum-row .val.saffron { color: var(--saffron); }
-.sum-row .val.teal    { color: var(--teal); }
-
-.sb-meta {
-  padding: 8px 0 12px;
-  margin-bottom: 4px;
-  border-bottom: 1px solid var(--border);
-  font-size: 12px;
-  color: var(--text-muted);
-  line-height: 1.8;
-}
-
-/* Sidebar festival banner */
-.festival-banner {
-  margin: 18px 28px 0;
-  padding: 14px 18px;
-  background: linear-gradient(135deg, rgba(240,165,0,0.10), rgba(255,107,0,0.07));
-  border: 1px solid rgba(240,165,0,0.35);
-  border-radius: var(--radius-sm);
-}
-.festival-banner .fest-icon { font-size: 22px; margin-bottom: 6px; display: block; }
-.festival-banner .fest-label {
-  font-size: 12px;
-  letter-spacing: 1px;
-  text-transform: uppercase;
-  color: var(--gold-dim);
-  font-weight: 600;
-  margin-bottom: 4px;
-}
-.festival-banner .fest-name {
-  font-family: 'EB Garamond', serif;
-  font-size: 18px;
-  color: var(--gold);
-  line-height: 1.4;
-}
-
-/* Sidebar adhika/kshaya masa banner */
-.adhika-banner {
-  margin: 12px 28px 0;
-  padding: 12px 16px;
-  background: rgba(74,222,128,0.08);
-  border: 1px solid rgba(74,222,128,0.25);
-  border-radius: var(--radius-sm);
-}
-.adhika-banner .adhika-icon { font-size: 18px; margin-bottom: 4px; display: block; }
-.adhika-banner .adhika-label {
-  font-size: 12px;
-  letter-spacing: 1px;
-  text-transform: uppercase;
-  color: var(--green);
-  font-weight: 600;
-  margin-bottom: 3px;
-}
-.adhika-banner .adhika-name {
-  font-family: 'EB Garamond', serif;
-  font-size: 16px;
-  color: var(--green);
-  line-height: 1.4;
-}
-
-.sidebar-footer {
-  margin-top: auto;
-  padding: 18px 28px;
-  border-top: 1px solid var(--border);
-  font-size: 13px;
-  color: var(--text-muted);
-  line-height: 1.7;
 }
 
 /* =====================================================================
@@ -990,8 +838,7 @@ body {
 }
 
 @media (max-width: 900px) {
-  #sidebar { display: none; }
-  #main { order: 1; padding: 28px 22px 60px; max-width: 100%; }
+  #main { padding: 28px 22px 60px; max-width: 100%; }
   .limbs-grid { grid-template-columns: repeat(3, 1fr); }
 }
 
@@ -1170,75 +1017,6 @@ span.flatpickr-weekday {
 </style>
 </head>
 <body>
-<div class="app-layout">
-
-  <!-- ================================================================
-       SIDEBAR
-  ================================================================ -->
-  <aside id="sidebar">
-    <div class="sidebar-header">
-      <span class="logo-symbol">☀</span>
-      <h1>Srikanta's Panchanga</h1>
-      <p>Vedic Astronomical Calculator</p>
-    </div>
-
-    <!-- Day Summary (populated by JS) -->
-    <div class="sidebar-summary" id="sidebar-summary" style="display:none">
-      <div class="sum-label">Today's Panchanga</div>
-      <div class="sb-meta" id="sb-meta">—</div>
-      <div class="sum-row">
-        <span class="key">Vara</span>
-        <span class="val gold" id="sb-vara">—</span>
-      </div>
-      <div class="sum-row">
-        <span class="key">Tithi</span>
-        <span class="val" id="sb-tithi">—</span>
-      </div>
-      <div class="sum-row">
-        <span class="key">Nakshatra</span>
-        <span class="val" id="sb-nakshatra">—</span>
-      </div>
-      <div class="sum-row">
-        <span class="key">Yoga</span>
-        <span class="val" id="sb-yoga">—</span>
-      </div>
-      <div class="sum-row">
-        <span class="key">Karana</span>
-        <span class="val" id="sb-karana">—</span>
-      </div>
-      <div class="sum-row">
-        <span class="key">Masa</span>
-        <span class="val saffron" id="sb-masa">—</span>
-      </div>
-      <div class="sum-row">
-        <span class="key">Paksha</span>
-        <span class="val" id="sb-paksha">—</span>
-      </div>
-      <div class="sum-row">
-        <span class="key">Lagna</span>
-        <span class="val teal" id="sb-lagna">—</span>
-      </div>
-      <div class="sum-row">
-        <span class="key">Samvatsara</span>
-        <span class="val" id="sb-year" style="font-size:13px">—</span>
-      </div>
-    </div>
-
-    <!-- Festival banner -->
-    <div class="festival-banner" id="sidebar-fest" style="display:none">
-      <span class="fest-icon">🪔</span>
-      <div class="fest-label">Festival</div>
-      <div class="fest-name" id="sb-fest-name">—</div>
-    </div>
-
-    <!-- Adhika / Kshaya Masa banner -->
-    <div class="adhika-banner" id="sidebar-adhika" style="display:none">
-      <span class="adhika-icon">✦</span>
-      <div class="adhika-label" id="sb-adhika-label">Adhika Masa</div>
-      <div class="adhika-name" id="sb-adhika-name">—</div>
-    </div>
-
-  </aside>
 
   <!-- ================================================================
        MAIN
@@ -1603,7 +1381,6 @@ span.flatpickr-weekday {
 
     </div><!-- /#output -->
   </main>
-</div><!-- /.app-layout -->
 
 <script>
 /**
@@ -2821,9 +2598,18 @@ function computeFullPanchanga(params) {
 
     let state = computePanchanga(queryDay, dateInfoQuery);
 
-    // Snapshot for festival lookup (at sunrise if requested)
-    const festThithiIndex = state.thithiIndex;
-    const festNakIndex    = state.nakIndex;
+    // Always compute a sunrise-based state for festival tithi/nakshatra lookup.
+    // Festivals (except vaideeka observances) are traditionally determined by
+    // the tithi at sunrise, not at an arbitrary query time.  This prevents the
+    // same festival firing on two consecutive calendar days simply because a
+    // long tithi straddles midnight.
+    const sunriseJ2000   = dateInfo.j2000DaysInt + (sunriseIST - 5.5) / 24.0;
+    const sunriseDateInfo = Object.assign({}, dateInfo, {
+        j2000Day: sunriseJ2000,
+        utHours:  sunriseIST - 5.5
+    });
+    const sunriseState = computePanchanga(sunriseJ2000, sunriseDateInfo);
+
     const thithiRemPct    = (1.0 - (state.thithiFrac - state.thithiIndex)) * 100.0;
     const nakRemPct       = (1.0 - (state.nakFrac - Math.trunc(state.nakFrac))) * 100.0;
 
@@ -2853,7 +2639,7 @@ function computeFullPanchanga(params) {
     const newYear = yearFromJ2000Days(Math.trunc(yearStartResult.monthStarts[0]));
     const yearName = samvatsaraName(newYear);
 
-    // Current month
+    // Current month (derived from query day, same as before)
     const { monthIndex, isAdhika } = findCurrentMonth(
         queryDay,
         yearStartResult.monthStarts,
@@ -2865,10 +2651,41 @@ function computeFullPanchanga(params) {
     const origState = computePanchanga(dateInfo.j2000Day, dateInfo);
     state = origState;
 
-    // Festival lookup
+    // Festival lookup.
+    // For non-vaideeka festivals, the tithi at sunrise is canonical: it
+    // prevents a long tithi from matching on two consecutive calendar days.
+    // However some festivals (Janmashtami, Maha Shivaratri) have their tithi
+    // begin after sunrise, so the sunrise tithi won't match. In that case we
+    // fall back to the query-time tithi so those festivals are not lost.
+    // Vaideeka observances always use the query-time tithi unchanged.
     const festMonth = monthIndex - 1;  // 0-based
-    const tblFestival   = lookupFestival(festMonth, festThithiIndex);
-    const specFestival  = detectSpecialFestival(state, festMonth);
+
+    const isVaideeka = (name) => name && name.toLowerCase().includes('vaideeka');
+
+    const tblAtSunrise = lookupFestival(festMonth, sunriseState.thithiIndex);
+    const tblAtQuery   = lookupFestival(festMonth, state.thithiIndex);
+
+    let tblFestival;
+    if (isVaideeka(tblAtQuery)) {
+        tblFestival = tblAtQuery;
+    } else if (tblAtSunrise && !isVaideeka(tblAtSunrise)) {
+        tblFestival = tblAtSunrise;
+    } else {
+        tblFestival = tblAtQuery;
+    }
+
+    const specAtSunrise = detectSpecialFestival(sunriseState, festMonth);
+    const specAtQuery   = detectSpecialFestival(state, festMonth);
+
+    let specFestival;
+    if (isVaideeka(specAtQuery)) {
+        specFestival = specAtQuery;
+    } else if (specAtSunrise && !isVaideeka(specAtSunrise)) {
+        specFestival = specAtSunrise;
+    } else {
+        specFestival = specAtQuery;
+    }
+
     const festival      = tblFestival || specFestival || null;
 
     // Rashi for Moon
@@ -3078,145 +2895,31 @@ function renderChart(containerId, lagnaRashi, grahas, getRashi, label) {
 }
 
 // ---------------------------------------------------------------------------
-// Geo-aware initialisation via ipapi.co
+// Initialisation — default to Bengaluru, current IST time
 // ---------------------------------------------------------------------------
 
-async function setDefaults() {
-  // Fallback: use browser's own timezone and Bangalore coords
-  const browserOffsetMinutes = -new Date().getTimezoneOffset();
-  const padOffset = (m) => {
-    const sign = m >= 0 ? '+' : '-';
-    const abs  = Math.abs(m);
-    return sign + String(Math.floor(abs/60)).padStart(2,'0') + String(abs%60).padStart(2,'0');
-  };
-  let geo = {
-    city:        'Bangalore',
-    country_name:'India',
-    latitude:     12.9716,
-    longitude:    77.5946,
-    utc_offset:   padOffset(browserOffsetMinutes)
-  };
-
-  try {
-    if (location.protocol !== 'file:') {
-      const CACHE_KEY = 'panchanga_geo';
-      const CACHE_TTL = 24 * 60 * 60 * 1000; // 24 hours
-      let cached = null;
-      try {
-        const raw = localStorage.getItem(CACHE_KEY);
-        if (raw) {
-          const parsed = JSON.parse(raw);
-          if (Date.now() - parsed._ts < CACHE_TTL) cached = parsed;
-        }
-      } catch (e) {}
-
-      if (cached) {
-        geo = cached;
-      } else {
-        const res  = await fetch('https://ipapi.co/json/');
-        const data = await res.json();
-        if (data && data.latitude) {
-          geo = data;
-          try { localStorage.setItem(CACHE_KEY, JSON.stringify({ ...data, _ts: Date.now() })); } catch (e) {}
-        }
-      }
-    }
-  } catch (e) { /* silent fallback */ }
-
-  // Parse UTC offset string (e.g. "+0530" → +330 min, "-0800" → -480 min)
-  const sign  = geo.utc_offset[0] === '-' ? -1 : 1;
-  const oh    = parseInt(geo.utc_offset.slice(1, 3), 10);
-  const om    = parseInt(geo.utc_offset.slice(3, 5), 10);
-  const offsetMinutes = sign * (oh * 60 + om);
-
-  // Local date/time at detected location
+function setDefaults() {
+  // Current IST = UTC + 5:30
   const now     = new Date();
-  const locDate = new Date(now.getTime() + offsetMinutes * 60000);
-  const day     = locDate.getUTCDate();
-  const month   = locDate.getUTCMonth() + 1;
-  const year    = locDate.getUTCFullYear();
+  const locDate = new Date(now.getTime() + 330 * 60000);
   const hour    = locDate.getUTCHours();
   const minute  = locDate.getUTCMinutes();
+  const istDate = new Date(locDate.getUTCFullYear(), locDate.getUTCMonth(), locDate.getUTCDate());
 
-  const tzHr  = sign * oh;
-  const tzMin = om;
-
-  const ipLat = parseFloat(geo.latitude);
-  const ipLon = parseFloat(geo.longitude);
-
-  // Try to match detected location to a preset city; otherwise use custom coords from IP
-  const select      = document.getElementById('inputCity');
-  const matchOption = [...select.options].find(o => {
-    if (o.value === 'custom') return false;
-    const [pLat, pLon] = o.value.split(',').map(Number);
-    return Math.abs(pLat - ipLat) < 1.0 && Math.abs(pLon - ipLon) < 1.0;
-  });
-
-  let lat, lon;
-  if (matchOption) {
-    select.value = matchOption.value;
-    [lat, lon] = matchOption.value.split(',').map(Number);
-  } else {
-    select.value = 'custom';
-    document.getElementById('inputLat').value = ipLat.toFixed(4);
-    document.getElementById('inputLon').value = ipLon.toFixed(4);
-    lat = ipLat;
-    lon = ipLon;
+  // Select Bengaluru in the city dropdown
+  const select = document.getElementById('inputCity');
+  const bengaluruOption = [...select.options].find(o =>
+    o.value !== 'custom' && o.textContent.trim().toLowerCase().includes('bengaluru')
+  );
+  if (bengaluruOption) {
+    select.value = bengaluruOption.value;
   }
   updateCoordDisplay();
 
-  // Set time input
+  // Set date and time inputs to current IST
+  datePicker.setDate(istDate);
   document.getElementById('inputTime').value =
     `${String(hour).padStart(2,'0')}:${String(minute).padStart(2,'0')}`;
-
-  // Sidebar preload
-  const cityName = matchOption
-    ? matchOption.textContent
-    : `${geo.city}, ${geo.country_name || geo.country_code || ''}`.trim().replace(/,$/, '');
-
-  const MONTHS = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
-  document.getElementById('sb-meta').innerHTML =
-    `${day} ${MONTHS[month-1]} ${year} &nbsp;·&nbsp; ${String(hour).padStart(2,'0')}:${String(minute).padStart(2,'0')}<br>${cityName}`;
-
-  try {
-    const r = PanchangaEngine.computeFullPanchanga({
-      day, month, year,
-      localHour:  hour,
-      localMin:   minute,
-      useSunrise: false,
-      latitude:   lat,
-      longitude:  lon,
-      tzHr,
-      tzMin
-    });
-
-    document.getElementById('sb-vara').textContent      = r.vara;
-    document.getElementById('sb-tithi').textContent     = r.tithi;
-    document.getElementById('sb-nakshatra').textContent = r.nakshatra;
-    document.getElementById('sb-yoga').textContent      = r.yoga;
-    document.getElementById('sb-karana').textContent    = r.karana;
-    document.getElementById('sb-masa').textContent      = r.lunarMonth;
-    document.getElementById('sb-paksha').textContent    = r.paksha;
-    document.getElementById('sb-lagna').textContent     = r.lagna;
-    document.getElementById('sb-year').textContent      = r.yearName;
-    document.getElementById('sidebar-summary').style.display = 'block';
-
-    if (r.festival) {
-      document.getElementById('sidebar-fest').style.display = 'block';
-      document.getElementById('sb-fest-name').textContent   = r.festival;
-    }
-    if (r.isAdhikaMasa) {
-      document.getElementById('sidebar-adhika').style.display = 'block';
-      document.getElementById('sb-adhika-label').textContent  = 'Adhika Masa';
-      document.getElementById('sb-adhika-name').textContent   = r.adhikaMonthName;
-    } else if (r.hasAdhikaMonth) {
-      document.getElementById('sidebar-adhika').style.display = 'block';
-      document.getElementById('sb-adhika-label').textContent  = 'Adhika Masa (this year)';
-      document.getElementById('sb-adhika-name').textContent   = r.adhikaMonthName;
-    }
-  } catch (e) {
-    console.warn('Sidebar preload failed:', e);
-  }
 }
 
 let lastPresetCoords = null;
@@ -3412,52 +3115,24 @@ function displayResult(r, meta) {
   if (r.festival) {
     document.getElementById('festCallout').style.display = 'flex';
     document.getElementById('festName').textContent = r.festival;
-    // Sidebar
-    document.getElementById('sidebar-fest').style.display = 'block';
-    document.getElementById('sb-fest-name').textContent = r.festival;
   } else {
     document.getElementById('festCallout').style.display = 'none';
-    document.getElementById('sidebar-fest').style.display = 'none';
   }
 
-  // Adhika masa badge (result area) + sidebar banner
+  // Adhika masa badge (result area)
   if (r.isAdhika) {
     // Currently in the adhika month itself
     document.getElementById('adhikaBadge').style.display = 'inline-flex';
     document.getElementById('adhikaName').textContent =
       r.adhikaMonthName + ' — Intercalary Month';
-    document.getElementById('sidebar-adhika').style.display = 'block';
-    document.getElementById('sb-adhika-label').textContent = 'Adhika Masa';
-    document.getElementById('sb-adhika-name').textContent = r.adhikaMonthName;
   } else if (r.hasAdhikaMonth) {
     // Adhika month occurs this Vedic year but not today
     document.getElementById('adhikaBadge').style.display = 'inline-flex';
     document.getElementById('adhikaName').textContent =
       'This Vedic year has ' + r.adhikaMonthName;
-    document.getElementById('sidebar-adhika').style.display = 'block';
-    document.getElementById('sb-adhika-label').textContent = 'Adhika Masa (this year)';
-    document.getElementById('sb-adhika-name').textContent = r.adhikaMonthName;
   } else {
     document.getElementById('adhikaBadge').style.display = 'none';
-    document.getElementById('sidebar-adhika').style.display = 'none';
   }
-
-  // Update sidebar summary
-  if (meta) {
-    document.querySelector('#sidebar-summary .sum-label').textContent = 'Panchanga';
-    document.getElementById('sb-meta').innerHTML =
-      `${meta.metaDate} &nbsp;·&nbsp; ${meta.metaTime}<br>${meta.cityName}`;
-  }
-  document.getElementById('sb-vara').textContent     = r.vara;
-  document.getElementById('sb-tithi').textContent    = r.tithi;
-  document.getElementById('sb-nakshatra').textContent = r.nakshatra;
-  document.getElementById('sb-yoga').textContent     = r.yoga;
-  document.getElementById('sb-karana').textContent   = r.karana;
-  document.getElementById('sb-masa').textContent     = r.lunarMonth;
-  document.getElementById('sb-paksha').textContent   = r.paksha;
-  document.getElementById('sb-lagna').textContent    = r.lagna;
-  document.getElementById('sb-year').textContent     = r.yearName;
-  document.getElementById('sidebar-summary').style.display = 'block';
 
   outputEl.classList.add('visible');
   requestAnimationFrame(() => {
@@ -3471,7 +3146,6 @@ function displayResult(r, meta) {
 // -----------------------------------------------------------------------
 const datePicker = flatpickr('#inputDate', {
   dateFormat: 'd M Y',
-  defaultDate: 'today',
   allowInput: false,
   weekNumbers: false
 });
