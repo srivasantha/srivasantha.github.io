@@ -979,20 +979,7 @@ body {
 }
 
 @media (max-width: 900px) {
-  .app-layout { flex-direction: column; }
-  #sidebar {
-    order: 2;
-    width: 100%;
-    height: auto;
-    position: static;
-    flex-direction: row;
-    flex-wrap: wrap;
-    border-right: none;
-    border-bottom: 1px solid var(--border);
-  }
-  .sidebar-header { flex: 1; min-width: 200px; }
-  .sidebar-summary { display: none; }
-  .festival-banner { display: none; }
+  #sidebar { display: none; }
   #main { order: 1; padding: 28px 22px 60px; max-width: 100%; }
   .limbs-grid { grid-template-columns: repeat(3, 1fr); }
 }
