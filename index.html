@@ -2208,9 +2208,6 @@ function makeDateInfoForDay(j2000Day, template) {
 function isAdhikaMonth(j2000Day, pancState, dateInfoTemplate) {
     const soura  = mod360(pancState.sunSiderealLon - pancState.ayanamsha);
     const Sst    = soura / 30.0;
-    const sFrac  = Math.trunc((Sst - Math.trunc(Sst)) * 30 + 1);
-
-    if (sFrac < 1 || sFrac > 3) return false;
 
     const startRashi = Math.trunc(Sst);
     let day = j2000Day + 28;
@@ -2250,22 +2247,38 @@ function findYearStart(j2000Day, dateInfoTemplate) {
 
     let day = j2000Day;
 
-    // Seek to near Chaitra (first month after Mesha Sankranthi).
+    // Find Chaitra Padya = the day after the Phalguna Amavasya (last Amavasya
+    // while the sun is in Meena, rashi 11).
+    // Strategy: find the nearest Amavasya, then walk backward month-by-month
+    // until we reach the one whose sun is in Meena.
     day = advanceToMonthEnd(day, dateInfoTemplate);
     let state = computePanchanga(day, makeDateInfoForDay(day, dateInfoTemplate));
-    let souraPos = mod360(state.sunSiderealLon - state.ayanamsha) / 30.0;
 
+    // If we landed far ahead (sun past Mesha), retreat to the year-start region.
+    let souraPos = mod360(state.sunSiderealLon - state.ayanamsha) / 30.0;
     if (souraPos > 1.0) {
         day -= souraPos * 30 + 5;
         state = computePanchanga(day, makeDateInfoForDay(day, dateInfoTemplate));
         day = advanceToMonthEnd(day, dateInfoTemplate);
         state = computePanchanga(day, makeDateInfoForDay(day, dateInfoTemplate));
-        souraPos = mod360(state.sunSiderealLon - state.ayanamsha) / 30.0;
-        day = retreatToMonthStart(day, dateInfoTemplate);
-    } else {
-        day = advanceToMonthEnd(day, dateInfoTemplate);
-        day = retreatToMonthStart(day, dateInfoTemplate);
     }
+
+    // Walk backward through Amavasyas until we find the one in Meena (rashi 11).
+    // That is Phalguna Amavasya; the next day is Chaitra Padya.
+    for (let guard = 0; guard < 14; guard++) {
+        const soura = mod360(state.sunSiderealLon - state.ayanamsha);
+        const rashi = Math.trunc(soura / 30.0);
+        if (rashi === 11) break;   // found Phalguna Amavasya
+        // Step back one lunar month and find its Amavasya
+        day -= 30;
+        day = advanceToMonthEnd(day, dateInfoTemplate);
+        state = computePanchanga(day, makeDateInfoForDay(day, dateInfoTemplate));
+    }
+
+    // Now day is the Phalguna Amavasya; Chaitra Padya is the next month start.
+    // Use Math.floor(day) + 2 to land solidly past Amavasya into Pratipada,
+    // avoiding the fractional-boundary issue where day+1 may still be Amavasya.
+    day = retreatToMonthStart(Math.floor(day) + 2, dateInfoTemplate);
 
     const monthStarts = new Array(12).fill(0);
     monthStarts[0] = day;   // Chaitra
@@ -2299,8 +2312,10 @@ function findYearStart(j2000Day, dateInfoTemplate) {
 function findCurrentMonth(j2000Day, monthStarts, hasAdhika, adhikaStart) {
     let month = 12;   // default: Phalguna
 
+    // Use floor(monthStarts) so the new month begins on the calendar day that
+    // Padya first appears, regardless of the sub-day transition time.
     for (let i = 0; i < 11; i++) {
-        if (j2000Day >= monthStarts[i] && j2000Day < monthStarts[i + 1]) {
+        if (j2000Day >= Math.floor(monthStarts[i]) && j2000Day < Math.floor(monthStarts[i + 1])) {
             month = i + 1;
             break;
         }
@@ -2640,9 +2655,10 @@ function computeFullPanchanga(params) {
     const newYear = yearFromJ2000Days(Math.trunc(yearStartResult.monthStarts[0]));
     const yearName = samvatsaraName(newYear);
 
-    // Current month (derived from query day, same as before)
+    // Current month: determined by the tithi at sunrise (canonical for festival
+    // assignment), not by the arbitrary query time.
     const { monthIndex, isAdhika } = findCurrentMonth(
-        queryDay,
+        sunriseJ2000,
         yearStartResult.monthStarts,
         yearStartResult.hasAdhika,
         yearStartResult.adhikaStart
@@ -2666,13 +2682,36 @@ function computeFullPanchanga(params) {
     const tblAtSunrise = lookupFestival(festMonth, sunriseState.thithiIndex);
     const tblAtQuery   = lookupFestival(festMonth, state.thithiIndex);
 
+    // For two-sunrise dedup and between-sunrise detection:
+    // compute tomorrow's approximate sunrise tithi (sunriseJ2000 + 1 day).
+    const nextSunriseJ2000b = sunriseJ2000 + 1.0;
+    const nextSunriseInfob  = Object.assign({}, dateInfo, {
+        j2000Day: nextSunriseJ2000b,
+        utHours:  (nextSunriseJ2000b - Math.floor(nextSunriseJ2000b)) * 24.0
+    });
+    const nextSunriseStateb = computePanchanga(nextSunriseJ2000b, nextSunriseInfob);
+    // True when tomorrow's sunrise has the same tithi → today is the first of
+    // two consecutive sunrise days for this tithi → suppress today, fire tomorrow.
+    const isTithiDupFirst = (nextSunriseStateb.thithiIndex === sunriseState.thithiIndex);
+
     let tblFestival;
     if (isVaideeka(tblAtQuery)) {
         tblFestival = tblAtQuery;
     } else if (tblAtSunrise && !isVaideeka(tblAtSunrise)) {
-        tblFestival = tblAtSunrise;
+        // Tithi is present at today's sunrise.
+        // If tomorrow's sunrise also has it, suppress today (second day is preferred).
+        tblFestival = isTithiDupFirst ? null : tblAtSunrise;
+    } else if (tblAtQuery && !isVaideeka(tblAtQuery)) {
+        // Tithi is not present at today's sunrise but is present at query time
+        // → it started after sunrise today.
+        // If it also reaches tomorrow's sunrise it spans the boundary; the
+        // sunrise-based rule will fire it tomorrow → suppress today.
+        // If it ends before tomorrow's sunrise it is entirely between the two
+        // sunrises (kshaya tithi): fire on the day it starts (today).
+        const nextTbl = lookupFestival(festMonth, nextSunriseStateb.thithiIndex);
+        tblFestival = (nextTbl === tblAtQuery) ? null : tblAtQuery;
     } else {
-        tblFestival = tblAtQuery;
+        tblFestival = null;
     }
 
     const specAtSunrise = detectSpecialFestival(sunriseState, festMonth);
@@ -2682,9 +2721,15 @@ function computeFullPanchanga(params) {
     if (isVaideeka(specAtQuery)) {
         specFestival = specAtQuery;
     } else if (specAtSunrise && !isVaideeka(specAtSunrise)) {
-        specFestival = specAtSunrise;
+        // Tithi at sunrise: suppress if tomorrow also has it (fire on second day).
+        specFestival = isTithiDupFirst ? null : specAtSunrise;
+    } else if (specAtQuery && !isVaideeka(specAtQuery)) {
+        // Tithi starts after sunrise today: fire only if it ends before tomorrow's
+        // sunrise (entirely between two sunrises — kshaya/between tithi).
+        const nextSpec = detectSpecialFestival(nextSunriseStateb, festMonth);
+        specFestival = (nextSpec === specAtQuery) ? null : specAtQuery;
     } else {
-        specFestival = specAtQuery;
+        specFestival = null;
     }
 
     const festivalRaw   = tblFestival || specFestival || null;
