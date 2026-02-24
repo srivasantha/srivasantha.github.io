@@ -464,6 +464,17 @@ body {
   gap: 12px;
 }
 
+/* Location row: preset + coordinates side by side */
+.location-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 22px;
+  align-items: start;
+}
+@media (max-width: 640px) {
+  .location-row { grid-template-columns: 1fr; }
+}
+
 /* Submit button */
 .btn-calc {
   width: 100%;
@@ -1397,42 +1408,41 @@ span.flatpickr-weekday {
               <label for="inputTime">Time (24h)</label>
               <input type="time" id="inputTime" required>
             </div>
-            <div class="form-group">
-              <label for="inputCity">Preset Location</label>
-              <select id="inputCity">
-                <option value="12.9716,77.5946">Bangalore (Bengaluru)</option>
-                <option value="12.2958,76.6394">Mysore (Mysuru)</option>
-                <option value="13.0033,76.1004">Hassan</option>
-                <option value="16.8524,74.5815">Sangli / Miraj</option>
-                <option value="37.7799,-121.9780">San Ramon, CA</option>
-                <option value="custom">Custom Coordinates</option>
-              </select>
-            </div>
-            <div class="form-group">
-              <label>&nbsp;</label>
-              <div class="coord-grid" id="customCoords" style="display:none">
-                <div class="form-group">
-                  <label for="inputLat">Latitude (°N)</label>
-                  <input type="number" id="inputLat" step="0.001" value="12.300">
-                </div>
-                <div class="form-group">
-                  <label for="inputLon">Longitude (°E)</label>
-                  <input type="number" id="inputLon" step="0.001" value="76.617">
-                </div>
+            <div class="form-group full location-row">
+              <div class="form-group">
+                <label for="inputCity">Preset Location</label>
+                <select id="inputCity">
+                  <option value="12.9716,77.5946">Bangalore (Bengaluru)</option>
+                  <option value="12.2958,76.6394">Mysore (Mysuru)</option>
+                  <option value="13.0033,76.1004">Hassan</option>
+                  <option value="16.8524,74.5815">Sangli / Miraj</option>
+                  <option value="37.7799,-121.9780">San Ramon, CA</option>
+                  <option value="custom">Custom Coordinates</option>
+                </select>
               </div>
-              <div id="coordDisplay" class="form-group">
-                <label>Coordinates</label>
-                <input type="text" id="coordText" readonly style="opacity:0.6;cursor:default">
+              <div class="form-group">
+                <div class="coord-grid" id="customCoords" style="display:none">
+                  <div class="form-group">
+                    <label for="inputLat">Latitude (°N)</label>
+                    <input type="number" id="inputLat" step="0.001" value="12.300">
+                  </div>
+                  <div class="form-group">
+                    <label for="inputLon">Longitude (°E)</label>
+                    <input type="number" id="inputLon" step="0.001" value="76.617">
+                  </div>
+                </div>
+                <div id="coordDisplay" class="form-group">
+                  <label>Coordinates</label>
+                  <input type="text" id="coordText" readonly style="opacity:0.6;cursor:default">
+                </div>
               </div>
             </div>
 
             <!-- Toggle: Sunrise vs Current time -->
             <div class="form-group full">
-              <label>Calculation Mode</label>
               <label class="toggle-row" for="useSunrise">
                 <div>
                   <span class="tl">Calculate at Sunrise</span>
-                  <span class="ts">Uses astronomical sunrise for the ruling-body principle</span>
                 </div>
                 <div class="toggle-switch">
                   <input type="checkbox" id="useSunrise">
@@ -3263,7 +3273,7 @@ function calculate() {
   const month  = fpDate.getMonth() + 1;
   const day    = fpDate.getDate();
   const [hour, minute] = timeStr.split(':').map(Number);
-  const useSunrise         = document.getElementById('useSunrise').checked;
+  const useSunrise = document.getElementById('useSunrise').checked;
 
   let lat = 12.9716, lon = 77.5946;
   const city = document.getElementById('inputCity').value;
