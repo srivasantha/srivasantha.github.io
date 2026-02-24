@@ -761,7 +761,7 @@ body {
   font-family: 'Inter', sans-serif;
   font-size: 15px;
   font-weight: 600;
-  color: var(--text-primary);
+  color: var(--gold);
 }
 
 .graha-table tr:last-child td { border-bottom: none; }
@@ -777,6 +777,8 @@ body {
   background: rgba(56,189,248,0.10);
   color: var(--teal);
   border: 1px solid rgba(56,189,248,0.30);
+  min-width: 9em;
+  text-align: center;
   font-weight: 500;
 }
 
@@ -2986,20 +2988,23 @@ const CITY_COORDS = {
 // Natal chart builder — North Indian style
 // ---------------------------------------------------------------------------
 
-// North Indian fixed house positions on a 4×4 grid (row, col), house index 0-based (house 1 = index 0)
-const NI_POSITIONS = [
-  [0, 1], // house 1  — top row, col 1
-  [0, 2], // house 2  — top row, col 2
-  [1, 3], // house 3  — mid, col 3
-  [2, 3], // house 4  — mid, col 3
-  [3, 3], // house 5  — bot row, col 3
-  [3, 2], // house 6  — bot row, col 2
-  [3, 1], // house 7  — bot row, col 1
-  [3, 0], // house 8  — bot row, col 0
-  [2, 0], // house 9  — mid, col 0
-  [1, 0], // house 10 — mid, col 0
-  [0, 0], // house 11 — top row, col 0
-  [0, 3], // house 12 — top row, col 3
+// North Indian fixed rashi positions — row/col mapped to fixed rashis (1-based).
+// Top row L→R: Meena(12), Mesha(1), Vrushabha(2), Mithuna(3)
+// Mid rows:    Karkataka(4), [centre], Simha(5) / Kanya(6), [centre], Tula(7)
+// Bottom L→R: Vrushchika(8), Dhanur(9), Makara(10), Khumbha(11)
+const NI_CELLS = [
+  { row: 0, col: 0, rashi: 12 }, // Meena
+  { row: 0, col: 1, rashi:  1 }, // Mesha
+  { row: 0, col: 2, rashi:  2 }, // Vrushabha
+  { row: 0, col: 3, rashi:  3 }, // Mithuna
+  { row: 1, col: 0, rashi:  4 }, // Karkataka
+  { row: 1, col: 3, rashi:  5 }, // Simha
+  { row: 2, col: 0, rashi:  6 }, // Kanya
+  { row: 2, col: 3, rashi:  7 }, // Tula
+  { row: 3, col: 0, rashi:  8 }, // Vrushchika
+  { row: 3, col: 1, rashi:  9 }, // Dhanur
+  { row: 3, col: 2, rashi: 10 }, // Makara
+  { row: 3, col: 3, rashi: 11 }, // Khumbha
 ];
 
 // Graha acronyms for compact chart display
@@ -3020,74 +3025,53 @@ function abbr(name) {
 }
 
 function buildNatalCharts(r) {
-  // Lagna rashi (1-based): house 1 = lagna rashi, subsequent houses are next rashis
-  const lagnaRashi = RASHI_NAMES_DISP.indexOf(r.lagna); // 1-based index
+  const lagnaRashi    = RASHI_NAMES_DISP.indexOf(r.lagna);
   const navLagnaRashi = RASHI_NAMES_DISP.indexOf(r.navamshaLagna);
 
-  renderChart('rashiChart',    lagnaRashi,    r.grahas, g => g.rashi,    'Rashi');
-  renderChart('navamshaChart', navLagnaRashi, r.grahas, g => {
-    // Match the same navamsha index logic as the graha table
-    return g.navamsha || 12;
-  }, 'Navamsha');
+  renderChart('rashiChart',    lagnaRashi,    r.grahas, g => g.rashi,          'Rashi');
+  renderChart('navamshaChart', navLagnaRashi, r.grahas, g => g.navamsha || 12, 'Navamsha');
 
   document.getElementById('natalCharts').style.display = 'grid';
 }
 
 function renderChart(containerId, lagnaRashi, grahas, getRashi, label) {
   const container = document.getElementById(containerId);
-  if (!lagnaRashi || lagnaRashi < 1) return;
-
-  // Build 4×4 grid: 16 cells. Centre 2×2 is one merged cell.
-  // For each of the 12 houses, determine which rashi occupies it.
-  // House h (1-based) has rashi = ((lagnaRashi - 1 + h - 1) % 12) + 1
 
   // Bucket grahas by rashi (1-based)
-  const rashiGrahas = {}; // rashiIndex -> [name, ...]
+  const rashiGrahas = {};
   for (const g of grahas) {
     const rashi = getRashi(g);
     if (!rashiGrahas[rashi]) rashiGrahas[rashi] = [];
     rashiGrahas[rashi].push(abbr(g.name));
   }
 
-  // Build a 4×4 array of cell content (null = empty/corner, 'centre' = centre block)
-  // Layout: corners at [0,0] WAIT — NI has no corners removed; it uses the full 4×4
-  // with the centre 2×2 as label. All 4 corners ARE houses (11,12,2,3 at top; 8,9 at bottom etc)
+  // Build 4×4 cell map from fixed NI_CELLS
   const cells = Array.from({length: 4}, () => Array(4).fill(null));
-
-  for (let h = 1; h <= 12; h++) {
-    const [row, col] = NI_POSITIONS[h - 1];
-    const rashi = ((lagnaRashi - 1 + h - 1) % 12) + 1;
-    const rashiName = RASHI_NAMES_DISP[rashi] || '';
+  for (const { row, col, rashi } of NI_CELLS) {
+    const rashiName  = RASHI_NAMES_DISP[rashi] || '';
     const grahaNames = rashiGrahas[rashi] || [];
-    const isLagna = h === 1;
-    cells[row][col] = { h, rashi, rashiName, grahaNames, isLagna };
+    const isLagna    = rashi === lagnaRashi;
+    cells[row][col]  = { rashi, rashiName, grahaNames, isLagna };
   }
 
   // Build HTML
   let html = '';
   for (let row = 0; row < 4; row++) {
     for (let col = 0; col < 4; col++) {
-      // Centre 2×2
       if (row === 1 && col === 1) {
         html += `<div class="ni-centre">${label}</div>`;
         continue;
       }
-      if (row >= 1 && row <= 2 && col >= 1 && col <= 2) {
-        continue; // spanned by centre
-      }
+      if (row >= 1 && row <= 2 && col >= 1 && col <= 2) continue;
       const cell = cells[row][col];
-      if (!cell) {
-        html += `<div class="ni-cell"></div>`;
-        continue;
-      }
+      if (!cell) { html += `<div class="ni-cell"></div>`; continue; }
       const names = cell.grahaNames;
       const grahaHtml = names.length > 2
         ? names.map(n => `<span class="graha-list">${n}</span>`).join('')
         : `<span class="graha-list">${names.join(', ')}</span>`;
       html += `<div class="ni-cell${cell.isLagna ? ' lagna-cell' : ''}">` +
         `<span class="rashi-name">${cell.rashiName}</span>` +
-        grahaHtml +
-        `</div>`;
+        grahaHtml + `</div>`;
     }
   }
 
@@ -3360,7 +3344,7 @@ function displayResult(r, meta) {
       <td>${g.name}</td>
       <td>${g.lon.toFixed(2)}</td>
       <td><span class="rashi-badge">${rashiName}</span></td>
-      <td>${navName}</td>
+      <td><span class="rashi-badge">${navName}</span></td>
     </tr>`;
   }).join('');
 
