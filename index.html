@@ -732,10 +732,12 @@ body {
   line-height: 1.4;
 }
 
-.ni-cell .rashi-name {
-  color: var(--teal);
+.lagna-label {
+  color: var(--gold);
   font-size: 10px;
+  font-weight: 700;
   display: block;
+  letter-spacing: 0.5px;
 }
 
 /* =====================================================================
@@ -2887,7 +2889,7 @@ function renderChart(containerId, lagnaRashi, grahas, getRashi, label) {
         ? names.map(n => `<span class="graha-list">${n}</span>`).join('')
         : `<span class="graha-list">${names.join(', ')}</span>`;
       html += `<div class="ni-cell${cell.isLagna ? ' lagna-cell' : ''}">` +
-        `<span class="rashi-name">${cell.rashiName}</span>` +
+        (cell.isLagna ? `<span class="lagna-label">Lag</span>` : '') +
         grahaHtml + `</div>`;
     }
   }
