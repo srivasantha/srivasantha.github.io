@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Srikantaiah's Panchanga Calculator</title>
+<title>Srikanta's Panchanga Calculator</title>
 <style>
   /* Offline font stack: maps Google Fonts families to system equivalents */
   @font-face { font-family: 'EB Garamond'; src: local('Georgia'), local('Georgia-Regular'); font-style: normal; font-weight: 400; }
@@ -161,6 +161,15 @@ body {
 .sum-row .val.saffron { color: var(--saffron); }
 .sum-row .val.teal    { color: var(--teal); }
 
+.sb-meta {
+  padding: 8px 0 12px;
+  margin-bottom: 4px;
+  border-bottom: 1px solid var(--border);
+  font-size: 12px;
+  color: var(--text-muted);
+  line-height: 1.8;
+}
+
 /* Sidebar festival banner */
 .festival-banner {
   margin: 18px 28px 0;
@@ -256,6 +265,19 @@ body {
   bottom: -40px; left: -40px;
   width: 180px; height: 180px;
   background: radial-gradient(circle, rgba(255,107,0,0.08) 0%, transparent 70%);
+  pointer-events: none;
+}
+
+.hero-moon {
+  position: absolute;
+  top: 10px; right: 36px;
+  width: 100px; height: 100px;
+  pointer-events: none;
+}
+
+.hero-stars {
+  position: absolute;
+  inset: 0;
   pointer-events: none;
 }
 
@@ -759,6 +781,103 @@ body {
 }
 
 /* =====================================================================
+   NATAL CHARTS (North Indian style)
+===================================================================== */
+.charts-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 28px;
+  margin-top: 4px;
+  margin-bottom: 28px;
+}
+@media (max-width: 700px) {
+  .charts-row { grid-template-columns: 1fr; }
+}
+
+.chart-wrap {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+}
+
+.chart-title {
+  font-family: 'EB Garamond', serif;
+  font-size: 17px;
+  font-weight: 600;
+  color: var(--text-secondary);
+  letter-spacing: 0.5px;
+  text-align: center;
+}
+
+/* The 4×4 grid. Corners are hidden; centre 2×2 = label cell */
+.ni-chart {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  grid-template-rows:    repeat(4, 1fr);
+  width: 100%;
+  max-width: 320px;
+  aspect-ratio: 1 / 1;
+  border: 2px solid var(--border-accent);
+  border-radius: 4px;
+  overflow: hidden;
+  background: var(--bg-card);
+}
+
+.ni-cell {
+  border: 1px solid var(--border);
+  padding: 5px 6px;
+  font-size: 11px;
+  line-height: 1.5;
+  color: var(--text-primary);
+  font-family: 'Inter', sans-serif;
+  min-height: 0;
+  overflow: hidden;
+}
+
+/* Centre label spans 2×2 */
+.ni-centre {
+  grid-column: 2 / 4;
+  grid-row:    2 / 4;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-family: 'EB Garamond', serif;
+  font-size: 15px;
+  font-weight: 600;
+  color: var(--text-muted);
+  border: 1px solid var(--border);
+  background: rgba(0,0,0,0.18);
+}
+
+/* Lagna cell highlight */
+.ni-cell.lagna-cell {
+  background: rgba(240,165,0,0.08);
+  border-color: rgba(240,165,0,0.40);
+}
+
+.ni-cell .house-num {
+  font-size: 9px;
+  color: var(--text-muted);
+  display: block;
+  margin-bottom: 1px;
+}
+
+.ni-cell .graha-list {
+  color: var(--gold);
+  font-size: 11px;
+  font-weight: 500;
+  display: block;
+  line-height: 1.4;
+}
+
+.ni-cell .rashi-name {
+  color: var(--teal);
+  font-size: 10px;
+  display: block;
+}
+
+/* =====================================================================
    FESTIVAL CALLOUT
 ===================================================================== */
 .festival-callout {
@@ -1057,13 +1176,14 @@ span.flatpickr-weekday {
   <aside id="sidebar">
     <div class="sidebar-header">
       <span class="logo-symbol">☀</span>
-      <h1>Srikantaiah's Panchanga</h1>
+      <h1>Srikanta's Panchanga</h1>
       <p>Vedic Astronomical Calculator</p>
     </div>
 
     <!-- Day Summary (populated by JS) -->
     <div class="sidebar-summary" id="sidebar-summary" style="display:none">
       <div class="sum-label">Today's Panchanga</div>
+      <div class="sb-meta" id="sb-meta">—</div>
       <div class="sum-row">
         <span class="key">Vara</span>
         <span class="val gold" id="sb-vara">—</span>
@@ -1116,14 +1236,6 @@ span.flatpickr-weekday {
       <div class="adhika-name" id="sb-adhika-name">—</div>
     </div>
 
-    <div class="sidebar-footer">
-      <strong style="color:var(--text-secondary)">Algorithm</strong><br>
-      Paul Schlyter Ephemeris<br>
-      Lahiri Ayanamsha<br>
-      Newton-Raphson Kepler Solver<br>
-      <br>
-      <span style="color:var(--gold-dim)">Epoch: J2000.0</span>
-    </div>
   </aside>
 
   <!-- ================================================================
@@ -1133,9 +1245,145 @@ span.flatpickr-weekday {
 
     <!-- Hero -->
     <div class="page-hero">
-      <div class="hero-kicker">Vedic Astronomy Engine</div>
-      <h2>Srikantaiah's <span>Panchanga</span></h2>
-      <p class="desc">Compute the five sacred astronomical limbs — Tithi, Vara, Nakshatra, Yoga and Karana — with full planetary positions, Lagna, and festival lookup.</p>
+      <!-- Full moon -->
+      <div class="hero-moon">
+        <svg viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
+          <defs>
+            <!-- Outermost wide halo -->
+            <radialGradient id="moonHalo" cx="50%" cy="50%" r="50%">
+              <stop offset="0%"   stop-color="rgba(255,240,180,0.13)"/>
+              <stop offset="55%"  stop-color="rgba(255,230,140,0.06)"/>
+              <stop offset="100%" stop-color="rgba(255,230,140,0)"/>
+            </radialGradient>
+            <!-- Mid atmospheric glow -->
+            <radialGradient id="moonAtmos" cx="50%" cy="50%" r="50%">
+              <stop offset="0%"   stop-color="rgba(255,245,200,0.22)"/>
+              <stop offset="70%"  stop-color="rgba(255,235,160,0.08)"/>
+              <stop offset="100%" stop-color="rgba(255,235,160,0)"/>
+            </radialGradient>
+            <!-- Moon disc surface: off-centre highlight for 3-D sphere feel -->
+            <radialGradient id="moonDisc" cx="42%" cy="38%" r="56%">
+              <stop offset="0%"   stop-color="#fffde8"/>
+              <stop offset="30%"  stop-color="#fef3c0"/>
+              <stop offset="65%"  stop-color="#fcd34d"/>
+              <stop offset="100%" stop-color="#b45309"/>
+            </radialGradient>
+            <!-- Limb-darkening overlay -->
+            <radialGradient id="moonLimb" cx="50%" cy="50%" r="50%">
+              <stop offset="60%"  stop-color="rgba(0,0,0,0)"/>
+              <stop offset="100%" stop-color="rgba(20,10,0,0.38)"/>
+            </radialGradient>
+            <!-- Soft blur for mare shapes -->
+            <filter id="mareBlur" x="-30%" y="-30%" width="160%" height="160%">
+              <feGaussianBlur stdDeviation="1.2"/>
+            </filter>
+          </defs>
+          <!-- Wide halo -->
+          <circle cx="50" cy="50" r="50" fill="url(#moonHalo)"/>
+          <!-- Atmospheric glow -->
+          <circle cx="50" cy="50" r="40" fill="url(#moonAtmos)"/>
+          <!-- Moon disc -->
+          <circle cx="50" cy="50" r="28" fill="url(#moonDisc)"/>
+          <!-- Mare (dark region) markings — blurred ellipses mimicking real maria -->
+          <g filter="url(#mareBlur)" opacity="0.55">
+            <!-- Mare Imbrium (upper-left) -->
+            <ellipse cx="42" cy="40" rx="7" ry="5.5" transform="rotate(-20,42,40)" fill="rgba(100,70,10,0.45)"/>
+            <!-- Mare Serenitatis (upper-right) -->
+            <ellipse cx="54" cy="38" rx="4.5" ry="3.5" transform="rotate(10,54,38)" fill="rgba(90,60,10,0.35)"/>
+            <!-- Mare Tranquillitatis (centre-right) -->
+            <ellipse cx="56" cy="48" rx="5" ry="3.5" transform="rotate(15,56,48)" fill="rgba(80,55,10,0.30)"/>
+            <!-- Mare Nubium (lower-left) -->
+            <ellipse cx="44" cy="56" rx="4" ry="3"   transform="rotate(-10,44,56)" fill="rgba(90,60,10,0.28)"/>
+            <!-- Oceanus Procellarum (left edge) -->
+            <ellipse cx="36" cy="48" rx="3.5" ry="5" transform="rotate(5,36,48)"  fill="rgba(80,55,10,0.25)"/>
+          </g>
+          <!-- Limb darkening ring -->
+          <circle cx="50" cy="50" r="28" fill="url(#moonLimb)"/>
+          <!-- Specular highlight -->
+          <ellipse cx="44" cy="40" rx="7" ry="5" fill="rgba(255,255,240,0.18)"/>
+        </svg>
+      </div>
+      <!-- Stars -->
+      <svg class="hero-stars" viewBox="0 0 800 130" preserveAspectRatio="xMidYMid slice" xmlns="http://www.w3.org/2000/svg">
+        <defs>
+          <!-- Soft glow filter for bright stars -->
+          <filter id="starGlow" x="-200%" y="-200%" width="500%" height="500%">
+            <feGaussianBlur stdDeviation="1.6" result="blur"/>
+            <feMerge><feMergeNode in="blur"/><feMergeNode in="SourceGraphic"/></feMerge>
+          </filter>
+          <filter id="starGlowSm" x="-200%" y="-200%" width="500%" height="500%">
+            <feGaussianBlur stdDeviation="0.8" result="blur"/>
+            <feMerge><feMergeNode in="blur"/><feMergeNode in="SourceGraphic"/></feMerge>
+          </filter>
+        </defs>
+
+        <!-- Faint background field stars (no filter, small) -->
+        <circle cx="35"  cy="12"  r="0.7" fill="white" opacity="0.40"/>
+        <circle cx="78"  cy="42"  r="0.6" fill="white" opacity="0.35"/>
+        <circle cx="118" cy="19"  r="0.7" fill="white" opacity="0.38"/>
+        <circle cx="155" cy="72"  r="0.6" fill="white" opacity="0.32"/>
+        <circle cx="195" cy="35"  r="0.7" fill="white" opacity="0.40"/>
+        <circle cx="238" cy="88"  r="0.6" fill="white" opacity="0.33"/>
+        <circle cx="272" cy="22"  r="0.7" fill="white" opacity="0.38"/>
+        <circle cx="310" cy="58"  r="0.6" fill="white" opacity="0.35"/>
+        <circle cx="348" cy="95"  r="0.7" fill="white" opacity="0.36"/>
+        <circle cx="382" cy="30"  r="0.6" fill="white" opacity="0.34"/>
+        <circle cx="418" cy="78"  r="0.7" fill="white" opacity="0.38"/>
+        <circle cx="452" cy="14"  r="0.6" fill="white" opacity="0.35"/>
+        <circle cx="488" cy="62"  r="0.7" fill="white" opacity="0.40"/>
+        <circle cx="524" cy="102" r="0.6" fill="white" opacity="0.33"/>
+        <circle cx="558" cy="38"  r="0.7" fill="white" opacity="0.37"/>
+        <circle cx="592" cy="85"  r="0.6" fill="white" opacity="0.34"/>
+        <circle cx="628" cy="22"  r="0.7" fill="white" opacity="0.39"/>
+        <circle cx="664" cy="68"  r="0.6" fill="white" opacity="0.35"/>
+        <circle cx="698" cy="110" r="0.7" fill="white" opacity="0.33"/>
+        <circle cx="735" cy="45"  r="0.6" fill="white" opacity="0.36"/>
+        <circle cx="762" cy="18"  r="0.7" fill="white" opacity="0.40"/>
+
+        <!-- Mid-brightness stars (small glow) -->
+        <g filter="url(#starGlowSm)">
+          <circle cx="55"  cy="65"  r="1.0" fill="white"        opacity="0.62"/>
+          <circle cx="142" cy="45"  r="1.1" fill="white"        opacity="0.65"/>
+          <circle cx="223" cy="98"  r="1.0" fill="white"        opacity="0.60"/>
+          <circle cx="295" cy="42"  r="1.1" fill="#fff8e0"      opacity="0.68"/>
+          <circle cx="370" cy="75"  r="1.0" fill="white"        opacity="0.62"/>
+          <circle cx="440" cy="110" r="1.1" fill="white"        opacity="0.60"/>
+          <circle cx="510" cy="48"  r="1.0" fill="#ffe8c0"      opacity="0.65"/>
+          <circle cx="580" cy="20"  r="1.1" fill="white"        opacity="0.65"/>
+          <circle cx="650" cy="90"  r="1.0" fill="white"        opacity="0.62"/>
+          <circle cx="720" cy="30"  r="1.1" fill="#fff0d0"      opacity="0.65"/>
+          <circle cx="775" cy="72"  r="1.0" fill="white"        opacity="0.60"/>
+        </g>
+
+        <!-- Bright stars with strong glow -->
+        <g filter="url(#starGlow)">
+          <circle cx="95"  cy="22"  r="1.5" fill="white"   opacity="0.92"/>
+          <circle cx="210" cy="55"  r="1.6" fill="#fff8e8" opacity="0.95"/>
+          <circle cx="338" cy="18"  r="1.5" fill="white"   opacity="0.90"/>
+          <circle cx="475" cy="32"  r="1.6" fill="#fffde0" opacity="0.95"/>
+          <circle cx="615" cy="55"  r="1.5" fill="white"   opacity="0.90"/>
+          <circle cx="752" cy="95"  r="1.5" fill="white"   opacity="0.88"/>
+        </g>
+
+        <!-- 4-pointed sparkle stars: tapered cross shape -->
+        <!-- Sparkle at ~160,28 -->
+        <g opacity="0.82" filter="url(#starGlow)">
+          <polygon points="160,21 161.4,27.2 168,28 161.4,28.8 160,35 158.6,28.8 152,28 158.6,27.2" fill="white"/>
+        </g>
+        <!-- Sparkle at ~405,22 -->
+        <g opacity="0.78" filter="url(#starGlow)">
+          <polygon points="405,15 406.2,21.2 413,22 406.2,22.8 405,29 403.8,22.8 397,22 403.8,21.2" fill="white"/>
+        </g>
+        <!-- Sparkle at ~545,72 (slightly larger) -->
+        <g opacity="0.75" filter="url(#starGlow)">
+          <polygon points="545,63 546.6,70.5 554,72 546.6,73.5 545,81 543.4,73.5 536,72 543.4,70.5" fill="#fff8e0"/>
+        </g>
+        <!-- Sparkle at ~685,35 -->
+        <g opacity="0.80" filter="url(#starGlow)">
+          <polygon points="685,28 686.2,34.2 693,35 686.2,35.8 685,42 683.8,35.8 677,35 683.8,34.2" fill="white"/>
+        </g>
+      </svg>
+      <h2>Srikanta's <span>Panchanga</span></h2>
     </div>
 
     <!-- Input Card -->
@@ -1223,7 +1471,7 @@ span.flatpickr-weekday {
       <!-- Output header -->
       <div class="output-header">
         <div class="card-icon icon-gold" style="width:38px;height:38px;font-size:18px">☀</div>
-        <h2>Panchanga Result — Srikantaiah's Calculator</h2>
+        <h2>Srikanta's Panchanga Result</h2>
         <span class="output-date-badge" id="outputDateBadge">—</span>
       </div>
 
@@ -1286,57 +1534,6 @@ span.flatpickr-weekday {
             <div class="si-val" id="ss-time">—</div>
           </div>
         </div>
-        <div class="sunrise-item">
-          <span class="si-icon">🌙</span>
-          <div>
-            <div class="si-label">Moon Rashi</div>
-            <div class="si-val" style="font-size:17px" id="moon-rashi">—</div>
-          </div>
-        </div>
-        <div class="sunrise-item">
-          <span class="si-icon">☀</span>
-          <div>
-            <div class="si-label">Ayanamsha</div>
-            <div class="si-val" style="font-size:17px" id="ayanamsha-val">—</div>
-          </div>
-        </div>
-      </div>
-
-      <!-- Five Limbs card -->
-      <div class="section-card">
-        <div class="sc-header">
-          <div class="card-icon icon-saff">✦</div>
-          <h3>The Five Limbs (Pancha Anga)</h3>
-        </div>
-        <div class="sc-body">
-          <div class="limbs-grid">
-            <div class="limb-cell">
-              <div class="limb-name">Vara</div>
-              <span class="limb-icon">📆</span>
-              <div class="limb-val" id="lm-vara">—</div>
-            </div>
-            <div class="limb-cell">
-              <div class="limb-name">Tithi</div>
-              <span class="limb-icon">🌙</span>
-              <div class="limb-val" id="lm-tithi">—</div>
-            </div>
-            <div class="limb-cell">
-              <div class="limb-name">Nakshatra</div>
-              <span class="limb-icon">⭐</span>
-              <div class="limb-val" id="lm-nak">—</div>
-            </div>
-            <div class="limb-cell">
-              <div class="limb-name">Yoga</div>
-              <span class="limb-icon">🔯</span>
-              <div class="limb-val" id="lm-yoga">—</div>
-            </div>
-            <div class="limb-cell">
-              <div class="limb-name">Karana</div>
-              <span class="limb-icon">⚡</span>
-              <div class="limb-val" id="lm-karana">—</div>
-            </div>
-          </div>
-        </div>
       </div>
 
       <!-- Calendar Details card -->
@@ -1374,6 +1571,18 @@ span.flatpickr-weekday {
           <h3>Graha Positions</h3>
         </div>
         <div class="sc-body">
+          <!-- Natal Charts -->
+          <div class="charts-row" id="natalCharts" style="display:none">
+            <div class="chart-wrap">
+              <div class="chart-title">Rashi Chart</div>
+              <div class="ni-chart" id="rashiChart"></div>
+            </div>
+            <div class="chart-wrap">
+              <div class="chart-title">Navamsha Chart</div>
+              <div class="ni-chart" id="navamshaChart"></div>
+            </div>
+          </div>
+
           <div class="graha-scroll">
             <table class="graha-table" id="grahaTable">
               <thead>
@@ -1387,6 +1596,7 @@ span.flatpickr-weekday {
               <tbody id="grahaBody"></tbody>
             </table>
           </div>
+
         </div>
       </div>
 
@@ -2251,12 +2461,12 @@ function isAdhikaMonth(j2000Day, pancState, dateInfoTemplate) {
  */
 function findYearStart(j2000Day, dateInfoTemplate) {
     const ADHIKA_NAMES = [
-        'Adhika Chaitra masa',    'Adhika Vaishaka masa',
-        'Adhika Jyeshta masa',    'Adhika Ashada masa',
-        'Adhika Shravana masa',   'Adhika Bhadrapada masa',
-        'Adhika Ashvayuja masa',  'Adhika Karthika masa',
-        'Adhika Margashira masa', 'Adhika Pushya masa',
-        'Adhika Magha masa',      'Adhika Palguna masa'
+        'Adhika Chaitra',    'Adhika Vaishaka',
+        'Adhika Jyeshta',    'Adhika Ashada',
+        'Adhika Shravana',   'Adhika Bhadrapada',
+        'Adhika Ashvayuja',  'Adhika Karthika',
+        'Adhika Margashira', 'Adhika Pushya',
+        'Adhika Magha',      'Adhika Palguna'
     ];
 
     let day = j2000Day;
@@ -2350,7 +2560,7 @@ const SAMVATSARA_NAMES = [
 function samvatsaraName(year) {
     let idx = (year - 1609 - 18) % 60;
     if (idx < 0) idx += 60;
-    return SAMVATSARA_NAMES[idx] + 'nama Samvatsara';
+    return SAMVATSARA_NAMES[idx];
 }
 
 /**
@@ -2420,23 +2630,23 @@ const RASHI_NAMES = [
 ];
 
 const RASHI_FULL_NAMES = [
-    'Mesha rashi',     'Vrushabha rashi', 'Mithuna rashi',   'Karkataka rashi',
-    'Simha rashi',     'Kanya rashi',     'Thula rashi',     'Vrushchika rashi',
-    'Dhanus rashi',    'Makara rashi',    'Kumbha rashi',    'Meena rashi'
+    'Mesha',     'Vrushabha', 'Mithuna',   'Karkataka',
+    'Simha',     'Kanya',     'Thula',     'Vrushchika',
+    'Dhanus',    'Makara',    'Kumbha',    'Meena'
 ];
 
 const LUNAR_MONTH_NAMES = [
     '',
-    'Chaitra masa',   'Vaishakha masa', 'Jyeshta masa',    'Ashadha masa',
-    'Shravana masa',  'Bhadrapada masa','Ashvayuja masa',  'Karthika masa',
-    'Margashira masa','Pushya masa',    'Magha masa',      'Palguna masa'
+    'Chaitra',   'Vaishakha', 'Jyeshta',    'Ashadha',
+    'Shravana',  'Bhadrapada','Ashvayuja',  'Karthika',
+    'Margashira','Pushya',    'Magha',      'Palguna'
 ];
 
 const SOURA_MONTH_NAMES = [
     '',
-    'Mesha masa',     'Vrushabha masa', 'Mithuna masa',   'Karkataka masa',
-    'Simha masa',     'Kanya masa',     'Tula masa',      'Vrushchika masa',
-    'Dhanurmasa',     'Makara masa',    'Khumbha masa',   'Meena masa'
+    'Mesha',     'Vrushabha', 'Mithuna',   'Karkataka',
+    'Simha',     'Kanya',     'Tula',      'Vrushchika',
+    'Dhanus',    'Makara',    'Khumbha',   'Meena'
 ];
 
 // ---------------------------------------------------------------------------
@@ -2622,7 +2832,7 @@ function computeFullPanchanga(params) {
     const kethuLon = mod360(rahuLon + 180.0);
 
     // Paksha
-    const paksha = state.thithiIndex < 15 ? 'Shuklapaksha' : 'Krishnapaksha';
+    const paksha = state.thithiIndex < 15 ? 'Shukla' : 'Krishna';
 
     // Soura (solar) month
     const souraMonthFrac  = mod360(state.sunSiderealLon - state.ayanamsha) / 30.0;
@@ -2772,6 +2982,118 @@ const CITY_COORDS = {
   '37.7799,-121.9780': [37.7799, -121.9780]
 };
 
+// ---------------------------------------------------------------------------
+// Natal chart builder — North Indian style
+// ---------------------------------------------------------------------------
+
+// North Indian fixed house positions on a 4×4 grid (row, col), house index 0-based (house 1 = index 0)
+const NI_POSITIONS = [
+  [0, 1], // house 1  — top row, col 1
+  [0, 2], // house 2  — top row, col 2
+  [1, 3], // house 3  — mid, col 3
+  [2, 3], // house 4  — mid, col 3
+  [3, 3], // house 5  — bot row, col 3
+  [3, 2], // house 6  — bot row, col 2
+  [3, 1], // house 7  — bot row, col 1
+  [3, 0], // house 8  — bot row, col 0
+  [2, 0], // house 9  — mid, col 0
+  [1, 0], // house 10 — mid, col 0
+  [0, 0], // house 11 — top row, col 0
+  [0, 3], // house 12 — top row, col 3
+];
+
+// Graha acronyms for compact chart display
+const GRAHA_ABBR = {
+  'Ravi':    'Rav',
+  'Chandra': 'Cha',
+  'Mangala': 'Man',
+  'Budha':   'Bud',
+  'Guru':    'Gur',
+  'Shukra':  'Shu',
+  'Shani':   'Sha',
+  'Rahu':    'Rah',
+  'Kethu':   'Ket'
+};
+
+function abbr(name) {
+  return GRAHA_ABBR[name] || name.slice(0, 3);
+}
+
+function buildNatalCharts(r) {
+  // Lagna rashi (1-based): house 1 = lagna rashi, subsequent houses are next rashis
+  const lagnaRashi = RASHI_NAMES_DISP.indexOf(r.lagna); // 1-based index
+  const navLagnaRashi = RASHI_NAMES_DISP.indexOf(r.navamshaLagna);
+
+  renderChart('rashiChart',    lagnaRashi,    r.grahas, g => g.rashi,    'Rashi');
+  renderChart('navamshaChart', navLagnaRashi, r.grahas, g => {
+    // Match the same navamsha index logic as the graha table
+    return g.navamsha || 12;
+  }, 'Navamsha');
+
+  document.getElementById('natalCharts').style.display = 'grid';
+}
+
+function renderChart(containerId, lagnaRashi, grahas, getRashi, label) {
+  const container = document.getElementById(containerId);
+  if (!lagnaRashi || lagnaRashi < 1) return;
+
+  // Build 4×4 grid: 16 cells. Centre 2×2 is one merged cell.
+  // For each of the 12 houses, determine which rashi occupies it.
+  // House h (1-based) has rashi = ((lagnaRashi - 1 + h - 1) % 12) + 1
+
+  // Bucket grahas by rashi (1-based)
+  const rashiGrahas = {}; // rashiIndex -> [name, ...]
+  for (const g of grahas) {
+    const rashi = getRashi(g);
+    if (!rashiGrahas[rashi]) rashiGrahas[rashi] = [];
+    rashiGrahas[rashi].push(abbr(g.name));
+  }
+
+  // Build a 4×4 array of cell content (null = empty/corner, 'centre' = centre block)
+  // Layout: corners at [0,0] WAIT — NI has no corners removed; it uses the full 4×4
+  // with the centre 2×2 as label. All 4 corners ARE houses (11,12,2,3 at top; 8,9 at bottom etc)
+  const cells = Array.from({length: 4}, () => Array(4).fill(null));
+
+  for (let h = 1; h <= 12; h++) {
+    const [row, col] = NI_POSITIONS[h - 1];
+    const rashi = ((lagnaRashi - 1 + h - 1) % 12) + 1;
+    const rashiName = RASHI_NAMES_DISP[rashi] || '';
+    const grahaNames = rashiGrahas[rashi] || [];
+    const isLagna = h === 1;
+    cells[row][col] = { h, rashi, rashiName, grahaNames, isLagna };
+  }
+
+  // Build HTML
+  let html = '';
+  for (let row = 0; row < 4; row++) {
+    for (let col = 0; col < 4; col++) {
+      // Centre 2×2
+      if (row === 1 && col === 1) {
+        html += `<div class="ni-centre">${label}</div>`;
+        continue;
+      }
+      if (row >= 1 && row <= 2 && col >= 1 && col <= 2) {
+        continue; // spanned by centre
+      }
+      const cell = cells[row][col];
+      if (!cell) {
+        html += `<div class="ni-cell"></div>`;
+        continue;
+      }
+      const names = cell.grahaNames;
+      const grahaHtml = names.length > 2
+        ? names.map(n => `<span class="graha-list">${n}</span>`).join('')
+        : `<span class="graha-list">${names.join(', ')}</span>`;
+      html += `<div class="ni-cell${cell.isLagna ? ' lagna-cell' : ''}">` +
+        `<span class="rashi-name">${cell.rashiName}</span>` +
+        grahaHtml +
+        `</div>`;
+    }
+  }
+
+  container.innerHTML = html;
+}
+
 // Set today's date and current time as defaults
 function setDefaults() {
   const now = new Date();
@@ -2779,6 +3101,81 @@ function setDefaults() {
   const min = String(now.getMinutes()).padStart(2, '0');
   document.getElementById('inputTime').value = `${hr}:${min}`;
   updateCoordDisplay();
+  preloadSidebar();
+}
+
+// Compute today's panchanga at the default location and populate the sidebar
+function preloadSidebar() {
+  const now = new Date();
+
+  // Derive IST (UTC+5:30) from UTC regardless of browser timezone
+  const utcMinutes = now.getUTCHours() * 60 + now.getUTCMinutes();
+  const istMinutes = (utcMinutes + 5 * 60 + 30) % (24 * 60);
+  const istHour    = Math.floor(istMinutes / 60);
+  const istMinute  = istMinutes % 60;
+
+  // Date in IST (advance by 1 day if UTC+5:30 crossed midnight)
+  const istMs   = now.getTime() + (5 * 60 + 30) * 60000;
+  const istDate = new Date(istMs);
+  const day     = istDate.getUTCDate();
+  const month   = istDate.getUTCMonth() + 1;
+  const year    = istDate.getUTCFullYear();
+
+  // Use the currently selected city's coordinates as the default
+  const cityVal  = document.getElementById('inputCity').value;
+  const cityName = cityVal !== 'custom'
+    ? document.querySelector(`#inputCity option[value="${cityVal}"]`).textContent
+    : 'Custom';
+  let lat = 12.9716, lon = 77.5946;
+  if (cityVal !== 'custom' && CITY_COORDS[cityVal]) {
+    [lat, lon] = CITY_COORDS[cityVal];
+  }
+
+  // Format meta line
+  const months = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+  const dateStr = `${day} ${months[month-1]} ${year}`;
+  const timeStr = `${String(istHour).padStart(2,'0')}:${String(istMinute).padStart(2,'0')} IST`;
+  document.getElementById('sb-meta').innerHTML =
+    `${dateStr} &nbsp;·&nbsp; ${timeStr}<br>${cityName}`;
+
+  try {
+    const r = PanchangaEngine.computeFullPanchanga({
+      day, month, year,
+      localHour:  istHour,
+      localMin:   istMinute,
+      useSunrise: false,
+      latitude:   lat,
+      longitude:  lon
+    });
+
+    document.getElementById('sb-vara').textContent      = r.vara;
+    document.getElementById('sb-tithi').textContent     = r.tithi;
+    document.getElementById('sb-nakshatra').textContent = r.nakshatra;
+    document.getElementById('sb-yoga').textContent      = r.yoga;
+    document.getElementById('sb-karana').textContent    = r.karana;
+    document.getElementById('sb-masa').textContent      = r.lunarMonth;
+    document.getElementById('sb-paksha').textContent    = r.paksha;
+    document.getElementById('sb-lagna').textContent     = r.lagna;
+    document.getElementById('sb-year').textContent      = r.yearName;
+    document.getElementById('sidebar-summary').style.display = 'block';
+
+    if (r.festival) {
+      document.getElementById('sidebar-fest').style.display = 'block';
+      document.getElementById('sb-fest-name').textContent   = r.festival;
+    }
+
+    if (r.isAdhikaMasa) {
+      document.getElementById('sidebar-adhika').style.display    = 'block';
+      document.getElementById('sb-adhika-label').textContent     = 'Adhika Masa';
+      document.getElementById('sb-adhika-name').textContent      = r.adhikaMonthName;
+    } else if (r.hasAdhikaMonth) {
+      document.getElementById('sidebar-adhika').style.display    = 'block';
+      document.getElementById('sb-adhika-label').textContent     = 'Adhika Masa (this year)';
+      document.getElementById('sb-adhika-name').textContent      = r.adhikaMonthName;
+    }
+  } catch (e) {
+    console.warn('Sidebar preload failed:', e);
+  }
 }
 
 let lastPresetCoords = null;
@@ -2839,6 +3236,9 @@ function calculate() {
 
   let lat = 12.9716, lon = 77.5946;
   const city = document.getElementById('inputCity').value;
+  const cityName = city !== 'custom'
+    ? document.querySelector(`#inputCity option[value="${city}"]`).textContent
+    : `${document.getElementById('inputLat').value}°N, ${document.getElementById('inputLon').value}°E`;
   if (city === 'custom') {
     lat = parseFloat(document.getElementById('inputLat').value);
     lon = parseFloat(document.getElementById('inputLon').value);
@@ -2849,6 +3249,10 @@ function calculate() {
   } else {
     [lat, lon] = CITY_COORDS[city];
   }
+
+  const MONTHS = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+  const metaDate = `${day} ${MONTHS[month-1]} ${year}`;
+  const metaTime = `${String(hour).padStart(2,'0')}:${String(minute).padStart(2,'0')} IST`;
 
   // Run computation asynchronously to keep UI responsive
   setTimeout(() => {
@@ -2862,7 +3266,7 @@ function calculate() {
         longitude: lon
       });
 
-      displayResult(result);
+      displayResult(result, { metaDate, metaTime, cityName });
     } catch (err) {
       console.error(err);
       showError('Calculation error: ' + err.message);
@@ -2886,7 +3290,7 @@ function showError(msg) {
 // -----------------------------------------------------------------------
 // Display result
 // -----------------------------------------------------------------------
-function displayResult(r) {
+function displayResult(r, meta) {
   const outputEl = document.getElementById('output');
 
   // Date badge
@@ -2895,7 +3299,7 @@ function displayResult(r) {
 
   // Tithi mini-card
   document.getElementById('mc-tithi').textContent = r.tithi;
-  const tithiPaksha = r.tithiIndex < 15 ? 'Shukla Paksha' : 'Krishna Paksha';
+  const tithiPaksha = r.tithiIndex < 15 ? 'Shukla' : 'Krishna';
   document.getElementById('mc-tithi-sub').textContent =
     `${tithiPaksha} · ${r.tithiIndex + 1} / 30`;
   const tithiElapsed = 100 - r.tithiRemPct;
@@ -2915,15 +3319,7 @@ function displayResult(r) {
   // Sunrise / sunset row
   document.getElementById('sr-time').textContent  = r.sunriseIST;
   document.getElementById('ss-time').textContent  = r.sunsetIST;
-  document.getElementById('moon-rashi').textContent = r.rashi;
-  document.getElementById('ayanamsha-val').textContent = r.ayanamsha + '°';
 
-  // Five limbs
-  document.getElementById('lm-vara').textContent   = r.vara;
-  document.getElementById('lm-tithi').textContent  = r.tithi;
-  document.getElementById('lm-nak').textContent    = r.nakshatra;
-  document.getElementById('lm-yoga').textContent   = r.yoga;
-  document.getElementById('lm-karana').textContent = r.karana;
 
   // Calendar table
   const calRows = [
@@ -2945,8 +3341,8 @@ function displayResult(r) {
 
   // Lagna table
   const lagnaRows = [
-    ['Lagna',          r.lagna + ' lagna'],
-    ['Navamsha Lagna', r.navamshaLagna + ' Navamsha'],
+    ['Lagna',          r.lagna],
+    ['Navamsha Lagna', r.navamshaLagna],
     ['Moon Rashi',     r.rashi],
     ['Ayanamsha',      r.ayanamsha + '°  (Lahiri)']
   ];
@@ -2967,6 +3363,9 @@ function displayResult(r) {
       <td>${navName}</td>
     </tr>`;
   }).join('');
+
+  // Natal charts
+  buildNatalCharts(r);
 
   // Festival callout
   if (r.festival) {
@@ -3003,6 +3402,11 @@ function displayResult(r) {
   }
 
   // Update sidebar summary
+  if (meta) {
+    document.querySelector('#sidebar-summary .sum-label').textContent = 'Panchanga';
+    document.getElementById('sb-meta').innerHTML =
+      `${meta.metaDate} &nbsp;·&nbsp; ${meta.metaTime}<br>${meta.cityName}`;
+  }
   document.getElementById('sb-vara').textContent     = r.vara;
   document.getElementById('sb-tithi').textContent    = r.tithi;
   document.getElementById('sb-nakshatra').textContent = r.nakshatra;
