@@ -1405,7 +1405,7 @@ span.flatpickr-weekday {
               <input type="text" id="inputDate" placeholder="Select a date">
             </div>
             <div class="form-group">
-              <label for="inputTime">Time (24h, IST)</label>
+              <label for="inputTime">Time (24h)</label>
               <input type="time" id="inputTime" required>
             </div>
             <div class="form-group">
@@ -1525,14 +1525,14 @@ span.flatpickr-weekday {
         <div class="sunrise-item">
           <span class="si-icon">🌅</span>
           <div>
-            <div class="si-label">Sunrise (IST)</div>
+            <div class="si-label">Sunrise</div>
             <div class="si-val" id="sr-time">—</div>
           </div>
         </div>
         <div class="sunrise-item">
           <span class="si-icon">🌇</span>
           <div>
-            <div class="si-label">Sunset (IST)</div>
+            <div class="si-label">Sunset</div>
             <div class="si-val" id="ss-time">—</div>
           </div>
         </div>
@@ -3100,9 +3100,27 @@ async function setDefaults() {
 
   try {
     if (location.protocol !== 'file:') {
-      const res  = await fetch('https://ipapi.co/json/');
-      const data = await res.json();
-      if (data && data.latitude) geo = data;
+      const CACHE_KEY = 'panchanga_geo';
+      const CACHE_TTL = 24 * 60 * 60 * 1000; // 24 hours
+      let cached = null;
+      try {
+        const raw = localStorage.getItem(CACHE_KEY);
+        if (raw) {
+          const parsed = JSON.parse(raw);
+          if (Date.now() - parsed._ts < CACHE_TTL) cached = parsed;
+        }
+      } catch (e) {}
+
+      if (cached) {
+        geo = cached;
+      } else {
+        const res  = await fetch('https://ipapi.co/json/');
+        const data = await res.json();
+        if (data && data.latitude) {
+          geo = data;
+          try { localStorage.setItem(CACHE_KEY, JSON.stringify({ ...data, _ts: Date.now() })); } catch (e) {}
+        }
+      }
     }
   } catch (e) { /* silent fallback */ }
 
@@ -3271,7 +3289,7 @@ function calculate() {
 
   const MONTHS = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
   const metaDate = `${day} ${MONTHS[month-1]} ${year}`;
-  const metaTime = `${String(hour).padStart(2,'0')}:${String(minute).padStart(2,'0')} IST`;
+  const metaTime = `${String(hour).padStart(2,'0')}:${String(minute).padStart(2,'0')}`;
 
   // Run computation asynchronously to keep UI responsive
   setTimeout(() => {
@@ -3314,7 +3332,7 @@ function displayResult(r, meta) {
 
   // Date badge
   document.getElementById('outputDateBadge').textContent =
-    `${r.date}  ${r.time} IST`;
+    `${r.date}  ${r.time}`;
 
   // Tithi mini-card
   document.getElementById('mc-tithi').textContent = r.tithi;
