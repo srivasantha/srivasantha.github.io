@@ -3078,58 +3078,90 @@ function renderChart(containerId, lagnaRashi, grahas, getRashi, label) {
   container.innerHTML = html;
 }
 
-// Set today's date and current time as defaults
-function setDefaults() {
-  const now = new Date();
-  const hr  = String(now.getHours()).padStart(2, '0');
-  const min = String(now.getMinutes()).padStart(2, '0');
-  document.getElementById('inputTime').value = `${hr}:${min}`;
-  updateCoordDisplay();
-  preloadSidebar();
-}
+// ---------------------------------------------------------------------------
+// Geo-aware initialisation via ipapi.co
+// ---------------------------------------------------------------------------
 
-// Compute today's panchanga at the default location and populate the sidebar
-function preloadSidebar() {
-  const now = new Date();
+async function setDefaults() {
+  // Fallback: Bangalore, IST
+  let geo = {
+    city:           'Bangalore',
+    latitude:        12.9716,
+    longitude:       77.5946,
+    utc_offset:     '+0530',   // ipapi.co format: "+0530" or "-0800"
+    timezone:       'Asia/Kolkata'
+  };
 
-  // Derive IST (UTC+5:30) from UTC regardless of browser timezone
-  const utcMinutes = now.getUTCHours() * 60 + now.getUTCMinutes();
-  const istMinutes = (utcMinutes + 5 * 60 + 30) % (24 * 60);
-  const istHour    = Math.floor(istMinutes / 60);
-  const istMinute  = istMinutes % 60;
+  try {
+    if (location.protocol !== 'file:') {
+      const res  = await fetch('https://ipapi.co/json/');
+      const data = await res.json();
+      if (data && data.latitude) geo = data;
+    }
+  } catch (e) { /* silent fallback */ }
 
-  // Date in IST (advance by 1 day if UTC+5:30 crossed midnight)
-  const istMs   = now.getTime() + (5 * 60 + 30) * 60000;
-  const istDate = new Date(istMs);
-  const day     = istDate.getUTCDate();
-  const month   = istDate.getUTCMonth() + 1;
-  const year    = istDate.getUTCFullYear();
+  // Parse UTC offset string (e.g. "+0530" → +330 min, "-0800" → -480 min)
+  const sign  = geo.utc_offset[0] === '-' ? -1 : 1;
+  const oh    = parseInt(geo.utc_offset.slice(1, 3), 10);
+  const om    = parseInt(geo.utc_offset.slice(3, 5), 10);
+  const offsetMinutes = sign * (oh * 60 + om);
 
-  // Use the currently selected city's coordinates as the default
-  const cityVal  = document.getElementById('inputCity').value;
-  const cityName = cityVal !== 'custom'
-    ? document.querySelector(`#inputCity option[value="${cityVal}"]`).textContent
-    : 'Custom';
-  let lat = 12.9716, lon = 77.5946;
-  if (cityVal !== 'custom' && CITY_COORDS[cityVal]) {
-    [lat, lon] = CITY_COORDS[cityVal];
+  // Local date/time at detected location
+  const now    = new Date();
+  const locMs  = now.getTime() + offsetMinutes * 60000;
+  const locDate = new Date(locMs);
+  const day    = locDate.getUTCDate();
+  const month  = locDate.getUTCMonth() + 1;
+  const year   = locDate.getUTCFullYear();
+  const hour   = locDate.getUTCHours();
+  const minute = locDate.getUTCMinutes();
+
+  const lat = parseFloat(geo.latitude);
+  const lon = parseFloat(geo.longitude);
+  const tzHr  = sign * oh;
+  const tzMin = om;
+
+  // Try to match detected location to a preset city; otherwise use custom
+  const select     = document.getElementById('inputCity');
+  const matchOption = [...select.options].find(o => {
+    if (o.value === 'custom') return false;
+    const [pLat, pLon] = o.value.split(',').map(Number);
+    return Math.abs(pLat - lat) < 0.5 && Math.abs(pLon - lon) < 0.5;
+  });
+
+  if (matchOption) {
+    select.value = matchOption.value;
+  } else {
+    select.value = 'custom';
+    document.getElementById('inputLat').value = lat.toFixed(4);
+    document.getElementById('inputLon').value = lon.toFixed(4);
   }
+  updateCoordDisplay();
 
-  // Format meta line
-  const months = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
-  const dateStr = `${day} ${months[month-1]} ${year}`;
-  const timeStr = `${String(istHour).padStart(2,'0')}:${String(istMinute).padStart(2,'0')} IST`;
+  // Set time input
+  document.getElementById('inputTime').value =
+    `${String(hour).padStart(2,'0')}:${String(minute).padStart(2,'0')}`;
+
+  // Sidebar preload
+  const cityName = matchOption
+    ? matchOption.textContent
+    : `${geo.city}, ${geo.country_name || geo.country_code || ''}`.trim().replace(/,$/, '');
+
+  const MONTHS = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+  const tzLabel = geo.utc_offset ? `UTC${geo.utc_offset}` : '';
   document.getElementById('sb-meta').innerHTML =
-    `${dateStr} &nbsp;·&nbsp; ${timeStr}<br>${cityName}`;
+    `${day} ${MONTHS[month-1]} ${year} &nbsp;·&nbsp; ${String(hour).padStart(2,'0')}:${String(minute).padStart(2,'0')} ${tzLabel}<br>${cityName}`;
 
   try {
     const r = PanchangaEngine.computeFullPanchanga({
       day, month, year,
-      localHour:  istHour,
-      localMin:   istMinute,
+      localHour:  hour,
+      localMin:   minute,
       useSunrise: false,
       latitude:   lat,
-      longitude:  lon
+      longitude:  lon,
+      tzHr,
+      tzMin
     });
 
     document.getElementById('sb-vara').textContent      = r.vara;
@@ -3147,15 +3179,14 @@ function preloadSidebar() {
       document.getElementById('sidebar-fest').style.display = 'block';
       document.getElementById('sb-fest-name').textContent   = r.festival;
     }
-
     if (r.isAdhikaMasa) {
-      document.getElementById('sidebar-adhika').style.display    = 'block';
-      document.getElementById('sb-adhika-label').textContent     = 'Adhika Masa';
-      document.getElementById('sb-adhika-name').textContent      = r.adhikaMonthName;
+      document.getElementById('sidebar-adhika').style.display = 'block';
+      document.getElementById('sb-adhika-label').textContent  = 'Adhika Masa';
+      document.getElementById('sb-adhika-name').textContent   = r.adhikaMonthName;
     } else if (r.hasAdhikaMonth) {
-      document.getElementById('sidebar-adhika').style.display    = 'block';
-      document.getElementById('sb-adhika-label').textContent     = 'Adhika Masa (this year)';
-      document.getElementById('sb-adhika-name').textContent      = r.adhikaMonthName;
+      document.getElementById('sidebar-adhika').style.display = 'block';
+      document.getElementById('sb-adhika-label').textContent  = 'Adhika Masa (this year)';
+      document.getElementById('sb-adhika-name').textContent   = r.adhikaMonthName;
     }
   } catch (e) {
     console.warn('Sidebar preload failed:', e);
