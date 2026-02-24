@@ -2036,8 +2036,7 @@ function computeSunrise(j2000Day, dateInfo) {
 
     // Time of Sun's transit (upper culmination) in UT hours.
     let utTransit = (noonState.sunRA - noonState.gmst0 * 15.0 - dateInfo.longitude) / 15.0;
-    if (utTransit < 0.0)  utTransit += 24.0;
-    if (utTransit > 24.0) utTransit -= 24.0;
+    utTransit = ((utTransit % 24.0) + 24.0) % 24.0;
 
     // Hour angle at rise/set.
     const cosLHA = (sind(kRiseAlt)
@@ -2688,7 +2687,8 @@ function computeFullPanchanga(params) {
         specFestival = specAtQuery;
     }
 
-    const festival      = tblFestival || specFestival || null;
+    const festivalRaw   = tblFestival || specFestival || null;
+    const festival      = (isAdhika && !isVaideeka(festivalRaw)) ? null : festivalRaw;
 
     // Rashi for Moon
     const rashiName = RASHI_FULL_NAMES[state.rashiIndex];
@@ -2719,10 +2719,12 @@ function computeFullPanchanga(params) {
     }));
 
     // Format sunrise/sunset
-    const srHr  = Math.trunc(sunriseIST);
-    const srMin = Math.round((sunriseIST - srHr) * 60);
-    const ssHr  = Math.trunc(sunsetIST);
-    const ssMin = Math.round((sunsetIST - ssHr) * 60);
+    let srHr  = Math.trunc(sunriseIST);
+    let srMin = Math.round((sunriseIST - srHr) * 60);
+    if (srMin === 60) { srHr += 1; srMin = 0; }
+    let ssHr  = Math.trunc(sunsetIST);
+    let ssMin = Math.round((sunsetIST - ssHr) * 60);
+    if (ssMin === 60) { ssHr += 1; ssMin = 0; }
 
     return {
         // Input echo
