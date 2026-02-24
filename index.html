@@ -2805,22 +2805,23 @@ const CITY_COORDS = {
 // ---------------------------------------------------------------------------
 
 // North Indian fixed rashi positions — row/col mapped to fixed rashis (1-based).
-// Top row L→R: Meena(12), Mesha(1), Vrushabha(2), Mithuna(3)
-// Mid rows:    Karkataka(4), [centre], Simha(5) / Kanya(6), [centre], Tula(7)
-// Bottom L→R: Vrushchika(8), Dhanur(9), Makara(10), Khumbha(11)
+// Top row L→R:    Meena(12), Mesha(1),    Vrushabha(2), Mithuna(3)
+// Mid rows:       Khumbha(11), [centre],  [centre],     Karkataka(4)
+//                 Makara(10),  [centre],  [centre],     Simha(5)
+// Bottom L→R:    Dhanur(9),  Vrushchika(8), Tula(7),   Kanya(6)
 const NI_CELLS = [
   { row: 0, col: 0, rashi: 12 }, // Meena
   { row: 0, col: 1, rashi:  1 }, // Mesha
   { row: 0, col: 2, rashi:  2 }, // Vrushabha
   { row: 0, col: 3, rashi:  3 }, // Mithuna
-  { row: 1, col: 0, rashi:  4 }, // Karkataka
-  { row: 1, col: 3, rashi:  5 }, // Simha
-  { row: 2, col: 0, rashi:  6 }, // Kanya
-  { row: 2, col: 3, rashi:  7 }, // Tula
-  { row: 3, col: 0, rashi:  8 }, // Vrushchika
-  { row: 3, col: 1, rashi:  9 }, // Dhanur
-  { row: 3, col: 2, rashi: 10 }, // Makara
-  { row: 3, col: 3, rashi: 11 }, // Khumbha
+  { row: 1, col: 0, rashi: 11 }, // Khumbha
+  { row: 1, col: 3, rashi:  4 }, // Karkataka
+  { row: 2, col: 0, rashi: 10 }, // Makara
+  { row: 2, col: 3, rashi:  5 }, // Simha
+  { row: 3, col: 0, rashi:  9 }, // Dhanur
+  { row: 3, col: 1, rashi:  8 }, // Vrushchika
+  { row: 3, col: 2, rashi:  7 }, // Tula
+  { row: 3, col: 3, rashi:  6 }, // Kanya
 ];
 
 // Graha acronyms for compact chart display
