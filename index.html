@@ -3139,25 +3139,30 @@ async function setDefaults() {
   const hour    = locDate.getUTCHours();
   const minute  = locDate.getUTCMinutes();
 
-  const lat   = parseFloat(geo.latitude);
-  const lon   = parseFloat(geo.longitude);
   const tzHr  = sign * oh;
   const tzMin = om;
 
-  // Try to match detected location to a preset city; otherwise use custom
+  const ipLat = parseFloat(geo.latitude);
+  const ipLon = parseFloat(geo.longitude);
+
+  // Try to match detected location to a preset city; otherwise use custom coords from IP
   const select      = document.getElementById('inputCity');
   const matchOption = [...select.options].find(o => {
     if (o.value === 'custom') return false;
     const [pLat, pLon] = o.value.split(',').map(Number);
-    return Math.abs(pLat - lat) < 0.5 && Math.abs(pLon - lon) < 0.5;
+    return Math.abs(pLat - ipLat) < 1.0 && Math.abs(pLon - ipLon) < 1.0;
   });
 
+  let lat, lon;
   if (matchOption) {
     select.value = matchOption.value;
+    [lat, lon] = matchOption.value.split(',').map(Number);
   } else {
     select.value = 'custom';
-    document.getElementById('inputLat').value = lat.toFixed(4);
-    document.getElementById('inputLon').value = lon.toFixed(4);
+    document.getElementById('inputLat').value = ipLat.toFixed(4);
+    document.getElementById('inputLon').value = ipLon.toFixed(4);
+    lat = ipLat;
+    lon = ipLon;
   }
   updateCoordDisplay();
 
