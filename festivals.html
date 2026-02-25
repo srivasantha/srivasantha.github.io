@@ -2815,7 +2815,7 @@ function computeFullPanchanga(params) {
     // Vaideeka observances always use the query-time tithi unchanged.
     const festMonth = monthIndex - 1;  // 0-based
 
-    const isVaideeka = (name) => name && (name.toLowerCase().includes('vaideeka') || name.toLowerCase().includes('vaidika'));
+    const isVaideeka = (name) => name && (name.includes('ವೈದೀಕ'));
 
     const tblAtSunrise = lookupFestival(festMonth, sunriseState.thithiIndex);
     const tblAtQuery   = lookupFestival(festMonth, state.thithiIndex);
