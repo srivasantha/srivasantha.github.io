@@ -2465,7 +2465,6 @@ const FESTIVAL_NAMES = {
     15: 'Rushi Panchami',
     16: 'Arakalagudu Nanjundayyanavara Vaideeka',
     17: 'Anantha Padmanabha Vratha',
-    18: 'Arakalagudu Nanjundayyanavara maneyalli Pitru Tarpana',
     19: 'Mahalaya Amavasya',
     20: 'Sharannavaratre Aarambha, Navaratre Padya',
     21: 'Durga Ashtami',
@@ -2506,7 +2505,6 @@ const FESTIVAL_MAP = {
     155: 15,  // Rushi Panchami
     157: 16,  // Vaideeka
     164: 17,  // Anantha
-    172: 18,  // Pitru Tarpana
     180: 19,  // Mahalaya
     181: 20,  // Navaratre Padya
     188: 21,  // Durgashtami
@@ -2694,16 +2692,44 @@ function computeFullPanchanga(params) {
     // two consecutive sunrise days for this tithi → suppress today, fire tomorrow.
     const isTithiDupFirst = (nextSunriseStateb.thithiIndex === sunriseState.thithiIndex);
 
+    // For vaideeka festivals: always evaluate thithi at 3:30 PM IST (15:30 IST = 10:00 UT).
+    // Rules:
+    //   1. If the vaideeka thithi is present at 3:30 PM today → use today
+    //      (covers both the single-day case and the first of two consecutive days).
+    //   2. If the vaideeka thithi starts after 3:30 PM today (not present at 3:30 today
+    //      but present at 3:30 tomorrow) → use tomorrow (suppress today, fire tomorrow).
+    const kPm330UT = 10.0;  // 15:30 IST = 10:00 UT
+    const pm330J2000Today    = dateInfo.j2000DaysInt + kPm330UT / 24.0;
+    const pm330J2000Tomorrow = dateInfo.j2000DaysInt + 1.0 + kPm330UT / 24.0;
+
+    const pm330InfoToday = Object.assign({}, dateInfo, {
+        j2000Day: pm330J2000Today,
+        utHours:  kPm330UT
+    });
+    const pm330InfoTomorrow = Object.assign({}, dateInfo, {
+        j2000Day: pm330J2000Tomorrow,
+        utHours:  kPm330UT
+    });
+    const pm330StateToday    = computePanchanga(pm330J2000Today,    pm330InfoToday);
+    const pm330StateTomorrow = computePanchanga(pm330J2000Tomorrow, pm330InfoTomorrow);
+
+    const tblAtPm330Today    = lookupFestival(festMonth, pm330StateToday.thithiIndex);
+    const tblAtPm330Tomorrow = lookupFestival(festMonth, pm330StateTomorrow.thithiIndex);
+
     let tblFestival;
-    if (isVaideeka(tblAtQuery)) {
-        tblFestival = tblAtQuery;
+    if (isVaideeka(tblAtPm330Today)) {
+        // Vaideeka thithi is present at 3:30 PM today → fire today.
+        tblFestival = tblAtPm330Today;
+    } else if (isVaideeka(tblAtPm330Tomorrow) && !isVaideeka(tblAtPm330Today)) {
+        // Vaideeka thithi starts after 3:30 PM today → fire tomorrow (suppress today).
+        tblFestival = null;
     } else if (tblAtSunrise && !isVaideeka(tblAtSunrise)) {
-        // Tithi is present at today's sunrise.
+        // Non-vaideeka: tithi is present at today's sunrise.
         // If tomorrow's sunrise also has it, suppress today (second day is preferred).
         tblFestival = isTithiDupFirst ? null : tblAtSunrise;
     } else if (tblAtQuery && !isVaideeka(tblAtQuery)) {
-        // Tithi is not present at today's sunrise but is present at query time
-        // → it started after sunrise today.
+        // Non-vaideeka: tithi is not present at today's sunrise but is present at
+        // query time → it started after sunrise today.
         // If it also reaches tomorrow's sunrise it spans the boundary; the
         // sunrise-based rule will fire it tomorrow → suppress today.
         // If it ends before tomorrow's sunrise it is entirely between the two
@@ -2717,15 +2743,21 @@ function computeFullPanchanga(params) {
     const specAtSunrise = detectSpecialFestival(sunriseState, festMonth);
     const specAtQuery   = detectSpecialFestival(state, festMonth);
 
+    const specAtPm330Today    = detectSpecialFestival(pm330StateToday,    festMonth);
+    const specAtPm330Tomorrow = detectSpecialFestival(pm330StateTomorrow, festMonth);
+
     let specFestival;
-    if (isVaideeka(specAtQuery)) {
-        specFestival = specAtQuery;
+    if (isVaideeka(specAtPm330Today)) {
+        // Vaideeka special festival present at 3:30 PM today → fire today.
+        specFestival = specAtPm330Today;
+    } else if (isVaideeka(specAtPm330Tomorrow) && !isVaideeka(specAtPm330Today)) {
+        // Vaideeka special festival starts after 3:30 PM today → suppress today.
+        specFestival = null;
     } else if (specAtSunrise && !isVaideeka(specAtSunrise)) {
-        // Tithi at sunrise: suppress if tomorrow also has it (fire on second day).
+        // Non-vaideeka: tithi at sunrise. Suppress if tomorrow also has it.
         specFestival = isTithiDupFirst ? null : specAtSunrise;
     } else if (specAtQuery && !isVaideeka(specAtQuery)) {
-        // Tithi starts after sunrise today: fire only if it ends before tomorrow's
-        // sunrise (entirely between two sunrises — kshaya/between tithi).
+        // Non-vaideeka: tithi starts after sunrise today.
         const nextSpec = detectSpecialFestival(nextSunriseStateb, festMonth);
         specFestival = (nextSpec === specAtQuery) ? null : specAtQuery;
     } else {
