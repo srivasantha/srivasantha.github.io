@@ -2391,8 +2391,9 @@ function findCurrentMonth(j2000Day, monthStarts, hasAdhika, adhikaStart, sunrise
                 Math.floor(j2000Day) === Math.floor(monthStartFrac) &&
                 j2000Day < monthStartFrac) {
                 if (hasAdhika && adhikaStart !== undefined &&
-                    j2000Day >= adhikaStart + 27.0) {
-                    // Sub-case B: adhika month immediately preceded this one.
+                    adhikaStart >= monthStartFrac - 32.0) {
+                    // Sub-case B: adhika month immediately preceded this one
+                    // (adhika started within ~32 days before this month's start).
                     isAdhika = true;
                 } else {
                     // Sub-case A: regular month preceded this one.
@@ -2798,6 +2799,19 @@ function computeFullPanchanga(params) {
     const todayTithiIdx = sunriseState.thithiIndex;
     const tithiStep     = (nextTithiIdx - todayTithiIdx + 30) % 30;
 
+    // Lunar month at tomorrow's sunrise — used by the between-sunrise probe to
+    // correctly assign a between-sunrise Padya (tithi 0) to the incoming month.
+    const { monthIndex: nextMonthIndex } = findCurrentMonth(
+        nextSunriseJ2000b,
+        yearStartResult.monthStarts,
+        yearStartResult.hasAdhika,
+        yearStartResult.adhikaStart,
+        nextSunriseStateb.thithiIndex,
+        yearStartResult.kshayaIndex,
+        yearStartResult.kshayaGapDay
+    );
+    const nextFestMonth = nextMonthIndex - 1;
+
     // For vaideeka festivals: always evaluate thithi at 3:30 PM IST (15:30 IST = 10:00 UT).
     // Rules:
     //   1. If the vaideeka thithi is present at 3:30 PM today → use today
@@ -2874,6 +2888,10 @@ function computeFullPanchanga(params) {
         // today's, then at least one tithi was entirely skipped — it started and
         // ended between the two sunrises.  Probe at midpoint and ¾-point between
         // the two sunrises to find which tithi was active in that window.
+        //
+        // Month note: a between-sunrise Padya (tithi 0) marks the start of a new
+        // lunar month.  Use tomorrow's festMonth for the lookup in that case,
+        // because Padya belongs to the incoming month, not the current one.
         if (tithiStep >= 2) {
             // At least one tithi fits entirely between the two sunrises.
             // Probe at midpoint and ¾-point to find it.
@@ -2884,12 +2902,13 @@ function computeFullPanchanga(params) {
                     utHours:  (probeJ - Math.floor(probeJ)) * 24.0
                 });
                 const probeState = computePanchanga(probeJ, probeInfo);
-                const tblAtProbe = lookupFestival(festMonth, probeState.thithiIndex);
+                const probeFestMonth = probeState.thithiIndex === 0 ? nextFestMonth : festMonth;
+                const tblAtProbe = lookupFestival(probeFestMonth, probeState.thithiIndex);
                 if (tblAtProbe && !isVaideeka(tblAtProbe)
                         && tblAtProbe !== tblAtSunrise
                         && !tblFestivals.includes(tblAtProbe)) {
                     // Confirm it doesn't reach tomorrow's sunrise.
-                    const nextTbl = lookupFestival(festMonth, nextTithiIdx);
+                    const nextTbl = lookupFestival(nextFestMonth, nextTithiIdx);
                     if (nextTbl !== tblAtProbe) tblFestivals.push(tblAtProbe);
                 }
             }
@@ -2944,11 +2963,12 @@ function computeFullPanchanga(params) {
                     utHours:  (probeJ - Math.floor(probeJ)) * 24.0
                 });
                 const probeState  = computePanchanga(probeJ, probeInfo);
-                const specAtProbe = detectSpecialFestival(probeState, festMonth);
+                const probeFestMonth = probeState.thithiIndex === 0 ? nextFestMonth : festMonth;
+                const specAtProbe = detectSpecialFestival(probeState, probeFestMonth);
                 if (specAtProbe && !isVaideeka(specAtProbe)
                         && specAtProbe !== specAtSunrise
                         && !specFestivals.includes(specAtProbe)) {
-                    const nextSpec = detectSpecialFestival(nextSunriseStateb, festMonth);
+                    const nextSpec = detectSpecialFestival(nextSunriseStateb, nextFestMonth);
                     if (nextSpec !== specAtProbe) specFestivals.push(specAtProbe);
                 }
             }
