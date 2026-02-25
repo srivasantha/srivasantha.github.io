@@ -1,9 +1,9 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="kn">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Srikanta's Panchanga Calculator</title>
+<title>ಶ್ರೀಕಂಠನ ಪಂಚಾಂಗ ಗಣಕ</title>
 <style>
   /* Offline font stack: maps Google Fonts families to system equivalents */
   @font-face { font-family: 'EB Garamond'; src: local('Georgia'), local('Georgia-Regular'); font-style: normal; font-weight: 400; }
@@ -1165,7 +1165,7 @@ span.flatpickr-weekday {
           <polygon points="685,28 686.2,34.2 693,35 686.2,35.8 685,42 683.8,35.8 677,35 683.8,34.2" fill="white"/>
         </g>
       </svg>
-      <h2>Srikanta's <span>Panchanga</span></h2>
+      <h2>ಶ್ರೀಕಂಠನ <span>ಪಂಚಾಂಗ</span></h2>
     </div>
 
     <!-- Input Card -->
@@ -1173,48 +1173,48 @@ span.flatpickr-weekday {
       <div class="card-hdr">
         <div class="card-icon icon-gold">📅</div>
         <div class="card-hdr-text">
-          <h3>Date &amp; Location</h3>
-          <p>Enter query date, time, and observer coordinates</p>
+          <h3>ದಿನಾಂಕ ಮತ್ತು ಸ್ಥಳ</h3>
+          <p>ದಿನಾಂಕ, ಸಮಯ ಮತ್ತು ಸ್ಥಳದ ನಿರ್ದೇಶಾಂಕಗಳನ್ನು ನಮೂದಿಸಿ</p>
         </div>
       </div>
       <div class="card-body">
         <form id="panchangaForm">
           <div class="form-grid">
             <div class="form-group">
-              <label for="inputDate">Date</label>
-              <input type="text" id="inputDate" placeholder="Select a date">
+              <label for="inputDate">ದಿನಾಂಕ</label>
+              <input type="text" id="inputDate" placeholder="ದಿನಾಂಕ ಆಯ್ಕೆ ಮಾಡಿ">
             </div>
             <div class="form-group">
-              <label for="inputTime">Time (24h)</label>
+              <label for="inputTime">ಸಮಯ (24ಘಂ)</label>
               <input type="time" id="inputTime" required>
             </div>
             <div class="form-group full location-row">
               <div class="form-group">
-                <label for="inputCity">Preset Location</label>
+                <label for="inputCity">ಸ್ಥಳ</label>
                 <select id="inputCity">
-                  <option value="12.9716,77.5946">Bangalore (Bengaluru)</option>
-                  <option value="12.2958,76.6394">Mysore (Mysuru)</option>
-                  <option value="13.0033,76.1004">Hassan</option>
-                  <option value="16.8524,74.5815">Sangli / Miraj</option>
-                  <option value="37.7799,-121.9780">San Ramon, CA</option>
-                  <option value="50.7753,6.0839">Aachen, GER</option>
-                  <option value="-33.8623,151.2077">Sydney, AUS</option>
-                  <option value="custom">Custom Coordinates</option>
+                  <option value="12.9716,77.5946">ಬೆಂಗಳೂರು</option>
+                  <option value="12.2958,76.6394">ಮೈಸೂರು</option>
+                  <option value="13.0033,76.1004">ಹಾಸನ</option>
+                  <option value="16.8524,74.5815">ಸಾಂಗ್ಲಿ / ಮಿರಜ್</option>
+                  <option value="37.7799,-121.9780">ಸ್ಯಾನ್ ರಮೋನ್, CA</option>
+                  <option value="50.7753,6.0839">ಆಖೆನ್, GER</option>
+                  <option value="-33.8623,151.2077">ಸಿಡ್ನಿ, AUS</option>
+                  <option value="custom">ಇತರ ಸ್ಥಳ</option>
                 </select>
               </div>
               <div class="form-group">
                 <div class="coord-grid" id="customCoords" style="display:none">
                   <div class="form-group">
-                    <label for="inputLat">Latitude (°N)</label>
+                    <label for="inputLat">ಅಕ್ಷಾಂಶ (°N)</label>
                     <input type="number" id="inputLat" step="0.001" value="12.300">
                   </div>
                   <div class="form-group">
-                    <label for="inputLon">Longitude (°E)</label>
+                    <label for="inputLon">ರೇಖಾಂಶ (°E)</label>
                     <input type="number" id="inputLon" step="0.001" value="76.617">
                   </div>
                 </div>
                 <div id="coordDisplay" class="form-group">
-                  <label>Coordinates</label>
+                  <label>ನಿರ್ದೇಶಾಂಕಗಳು</label>
                   <input type="text" id="coordText" readonly style="opacity:0.6;cursor:default">
                 </div>
               </div>
@@ -1224,7 +1224,7 @@ span.flatpickr-weekday {
             <div class="form-group full">
               <label class="toggle-row" for="useSunrise">
                 <div>
-                  <span class="tl">Calculate at Sunrise</span>
+                  <span class="tl">ಸೂರ್ಯೋದಯದ ಸಮಯದಲ್ಲಿ ಲೆಕ್ಕಾಚಾರ ಮಾಡಿ</span>
                 </div>
                 <div class="toggle-switch">
                   <input type="checkbox" id="useSunrise">
@@ -1236,7 +1236,7 @@ span.flatpickr-weekday {
 
           <div class="error-msg" id="errorMsg"></div>
           <button type="submit" class="btn-calc" id="calcBtn">
-            ✦ Calculate
+            ✦ ಲೆಕ್ಕ ಹಾಕಿ
           </button>
         </form>
       </div>
@@ -1245,7 +1245,7 @@ span.flatpickr-weekday {
     <!-- Loading spinner -->
     <div class="spinner-wrap" id="spinnerWrap">
       <div class="spinner"></div>
-      <p>Computing astronomical positions…</p>
+      <p>ಖಗೋಳ ಸ್ಥಾನಗಳನ್ನು ಲೆಕ್ಕ ಹಾಕಲಾಗುತ್ತಿದೆ…</p>
     </div>
 
     <!-- Output section -->
@@ -1254,7 +1254,7 @@ span.flatpickr-weekday {
       <!-- Output header -->
       <div class="output-header">
         <div class="card-icon icon-gold" style="width:38px;height:38px;font-size:18px">☀</div>
-        <h2>Srikanta's Panchanga Result</h2>
+        <h2>ಶ್ರೀಕಂಠನ ಪಂಚಾಂಗ ಫಲಿತಾಂಶ</h2>
         <span class="output-date-badge" id="outputDateBadge">—</span>
       </div>
 
@@ -1262,7 +1262,7 @@ span.flatpickr-weekday {
       <div class="festival-callout" id="festCallout" style="display:none">
         <div class="fc-icon">🪔</div>
         <div>
-          <div class="fc-label">Festival</div>
+          <div class="fc-label">ಹಬ್ಬ</div>
           <div class="fc-name" id="festName">—</div>
         </div>
       </div>
@@ -1276,26 +1276,26 @@ span.flatpickr-weekday {
       <!-- Tithi + Nakshatra mini-cards -->
       <div class="mini-cards-row">
         <div class="mini-card">
-          <div class="mc-label">Tithi (Lunar Day)</div>
+          <div class="mc-label">ತಿಥಿ (ಚಾಂದ್ರ ದಿನ)</div>
           <div class="mc-value" id="mc-tithi">—</div>
           <div class="mc-sub" id="mc-tithi-sub">—</div>
           <div class="progress-bar-wrap">
             <div class="progress-bar gold" id="pb-tithi" style="width:0%"></div>
           </div>
           <div class="progress-label">
-            <span>Elapsed</span>
+            <span>ಕಳೆದಿದೆ</span>
             <span id="pct-tithi">—</span>
           </div>
         </div>
         <div class="mini-card">
-          <div class="mc-label">Nakshatra (Lunar Mansion)</div>
+          <div class="mc-label">ನಕ್ಷತ್ರ (ಚಂದ್ರ ಮನೆ)</div>
           <div class="mc-value" id="mc-nak">—</div>
           <div class="mc-sub" id="mc-nak-sub">—</div>
           <div class="progress-bar-wrap">
             <div class="progress-bar saffron" id="pb-nak" style="width:0%"></div>
           </div>
           <div class="progress-label">
-            <span>Elapsed</span>
+            <span>ಕಳೆದಿದೆ</span>
             <span id="pct-nak">—</span>
           </div>
         </div>
@@ -1306,14 +1306,14 @@ span.flatpickr-weekday {
         <div class="sunrise-item">
           <span class="si-icon">🌅</span>
           <div>
-            <div class="si-label">Sunrise</div>
+            <div class="si-label">ಸೂರ್ಯೋದಯ</div>
             <div class="si-val" id="sr-time">—</div>
           </div>
         </div>
         <div class="sunrise-item">
           <span class="si-icon">🌇</span>
           <div>
-            <div class="si-label">Sunset</div>
+            <div class="si-label">ಸೂರ್ಯಾಸ್ತ</div>
             <div class="si-val" id="ss-time">—</div>
           </div>
         </div>
@@ -1323,7 +1323,7 @@ span.flatpickr-weekday {
       <div class="section-card">
         <div class="sc-header">
           <div class="card-icon icon-gold">🗓</div>
-          <h3>Vedic Calendar Details</h3>
+          <h3>ವೈದಿಕ ಪಂಚಾಂಗ ವಿವರಗಳು</h3>
         </div>
         <div class="sc-body">
           <table class="info-table">
@@ -1337,7 +1337,7 @@ span.flatpickr-weekday {
       <div class="section-card">
         <div class="sc-header">
           <div class="card-icon icon-teal">⬡</div>
-          <h3>Lagna &amp; Navamsha</h3>
+          <h3>ಲಗ್ನ &amp; ನವಾಂಶ</h3>
         </div>
         <div class="sc-body">
           <table class="info-table">
@@ -1351,17 +1351,17 @@ span.flatpickr-weekday {
       <div class="section-card">
         <div class="sc-header">
           <div class="card-icon icon-saff">🪐</div>
-          <h3>Graha Positions</h3>
+          <h3>ಗ್ರಹ ಸ್ಥಾನಗಳು</h3>
         </div>
         <div class="sc-body">
           <!-- Natal Charts -->
           <div class="charts-row" id="natalCharts" style="display:none">
             <div class="chart-wrap">
-              <div class="chart-title">Rashi Chart</div>
+              <div class="chart-title">ರಾಶಿ ಚಕ್ರ</div>
               <div class="ni-chart" id="rashiChart"></div>
             </div>
             <div class="chart-wrap">
-              <div class="chart-title">Navamsha Chart</div>
+              <div class="chart-title">ನವಾಂಶ ಚಕ್ರ</div>
               <div class="ni-chart" id="navamshaChart"></div>
             </div>
           </div>
@@ -1370,10 +1370,10 @@ span.flatpickr-weekday {
             <table class="graha-table" id="grahaTable">
               <thead>
                 <tr>
-                  <th>Graha</th>
-                  <th>Longitude°</th>
-                  <th>Rashi</th>
-                  <th>Navamsha</th>
+                  <th>ಗ್ರಹ</th>
+                  <th>ರೇಖಾಂಶ°</th>
+                  <th>ರಾಶಿ</th>
+                  <th>ನವಾಂಶ</th>
                 </tr>
               </thead>
               <tbody id="grahaBody"></tbody>
@@ -2239,13 +2239,13 @@ function isAdhikaMonth(j2000Day, pancState, dateInfoTemplate) {
  */
 function findYearStart(j2000Day, dateInfoTemplate) {
     const ADHIKA_NAMES = [
-        'Adhika Chaitra',    'Adhika Vaishaka',
-        'Adhika Jyeshta',    'Adhika Ashada',
-        'Adhika Shravana',   'Adhika Bhadrapada',
-        'Adhika Ashvayuja',  'Adhika Karthika',
-        'Adhika Margashira', 'Adhika Pushya',
-        'Adhika Magha',      'Adhika Palguna',
-        'Adhika Palguna'
+        'ಅಧಿಕ ಚೈತ್ರ',    'ಅಧಿಕ ವೈಶಾಖ',
+        'ಅಧಿಕ ಜ್ಯೇಷ್ಠ',    'ಅಧಿಕ ಆಷಾಢ',
+        'ಅಧಿಕ ಶ್ರಾವಣ',   'ಅಧಿಕ ಭಾದ್ರಪದ',
+        'ಅಧಿಕ ಅಶ್ವಯುಜ',  'ಅಧಿಕ ಕಾರ್ತಿಕ',
+        'ಅಧಿಕ ಮಾರ್ಗಶಿರ', 'ಅಧಿಕ ಪುಷ್ಯ',
+        'ಅಧಿಕ ಮಾಘ',      'ಅಧಿಕ ಫಾಲ್ಗುಣ',
+        'ಅಧಿಕ ಫಾಲ್ಗುಣ'
     ];
 
     let day = j2000Day;
@@ -2471,21 +2471,21 @@ function findCurrentMonth(j2000Day, monthStarts, hasAdhika, adhikaStart, sunrise
 // ---------------------------------------------------------------------------
 
 const SAMVATSARA_NAMES = [
-    'Prabhava',        'Vibhava',       'Shukla',          'Pramo-dhootha',
-    'Prajothpaththi',  'Aangirasa',     'Srimukha',        'Bhaava',
-    'Yuva',            'Dhathru',       'Eeshwara',        'Bahudhanya',
-    'Pramathi',        'Vikrama',       'Vishu',           'Chithrabhaanu',
-    'Swabhaanu',       'Thaarana',      'Paarthiva',       'Vyaya',
-    'Sarvajithu',      'Sarvadhaari',   'Virodhi',         'Vikruthi',
-    'Khara',           'Nandana',       'Vijaya',          'Jaya',
-    'Manmatha',        'Durmukhi',      'Hevilambi',       'Vilambi',
-    'Vikari',          'Shaarvari',     'Plava',           'Shubhakrithu',
-    'Shobhakrithu',    'Krodhi',        'Vishwavasu',      'Parabhava',
-    'Plavanga',        'Keelaka',       'Soumya',          'Saadhaarana',
-    'Virodhikrithu',   'Pareedhaavi',   'Pramaadheecha',   'Ananda',
-    'Rakshasa',        'Nala',          'Paingala',        'Kalayukthi',
-    'Sidhdharthi',     'Roudhri',       'Durmathi',        'Dhundubhi',
-    'Rudhirodhgaari',  'Rakthaakshi',   'Krodhana',        'Akshaya'
+    'ಪ್ರಭವ',        'ವಿಭವ',       'ಶುಕ್ಲ',          'ಪ್ರಮೋದೂತ',
+    'ಪ್ರಜೋತ್ಪತ್ತಿ',  'ಆಂಗಿರಸ',     'ಶ್ರೀಮುಖ',        'ಭಾವ',
+    'ಯುವ',            'ಧಾತ್ರು',       'ಈಶ್ವರ',        'ಬಹುಧಾನ್ಯ',
+    'ಪ್ರಮಾಥಿ',        'ವಿಕ್ರಮ',       'ವಿಷು',           'ಚಿತ್ರಭಾನು',
+    'ಸ್ವಭಾನು',       'ತಾರಣ',      'ಪಾರ್ಥಿವ',       'ವ್ಯಯ',
+    'ಸರ್ವಜಿತ್ತು',      'ಸರ್ವಧಾರಿ',   'ವಿರೋಧಿ',         'ವಿಕೃತಿ',
+    'ಖರ',           'ನಂದನ',       'ವಿಜಯ',          'ಜಯ',
+    'ಮನ್ಮಥ',        'ದುರ್ಮುಖಿ',    'ಹೇವಿಳಂಬಿ',      'ವಿಳಂಬಿ',
+    'ವಿಕಾರಿ',         'ಶಾರ್ವರಿ',     'ಪ್ಲವ',           'ಶುಭಕೃತು',
+    'ಶೋಭಕೃತು',    'ಕ್ರೋಧಿ',       'ವಿಶ್ವಾವಸು',       'ಪರಾಭವ',
+    'ಪ್ಲವಂಗ',        'ಕೀಲಕ',       'ಸೌಮ್ಯ',          'ಸಾಧಾರಣ',
+    'ವಿರೋಧಿಕೃತು',   'ಪರಿಧಾವಿ',   'ಪ್ರಮಾದೀಚ',   'ಆನಂದ',
+    'ರಾಕ್ಷಸ',         'ನಳ',          'ಪಿಂಗಳ',        'ಕಲಾಯುಕ್ತಿ',
+    'ಸಿದ್ಧಾರ್ಥಿ',     'ರೌದ್ರಿ',       'ದುರ್ಮತಿ',        'ದುಂದುಭಿ',
+    'ರುಧಿರೋದ್ಗಾರಿ',  'ರಕ್ತಾಕ್ಷಿ',   'ಕ್ರೋಧನ',        'ಅಕ್ಷಯ'
 ];
 
 function samvatsaraName(year) {
@@ -2508,76 +2508,76 @@ function yearFromJ2000Days(days) {
 // ---------------------------------------------------------------------------
 
 const VARA_NAMES = [
-    'Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'
+    'ಭಾನುವಾರ', 'ಸೋಮವಾರ', 'ಮಂಗಳವಾರ', 'ಬುಧವಾರ', 'ಗುರುವಾರ', 'ಶುಕ್ರವಾರ', 'ಶನಿವಾರ'
 ];
 
 const TITHI_NAMES = [
-    'Padya',       'Bidige',      'Thadige',      'Chouthi',      'Panchami',
-    'Shrashti',    'Sapthami',    'Ashtami',      'Navami',       'Dashami',
-    'Ekadashi',    'Dwadashi',    'Thrayodashi',  'Chaturdashi',  'Poornime',
-    'Padya',       'Bidige',      'Thadige',      'Chouthi',      'Panchami',
-    'Shrashti',    'Sapthami',    'Ashtami',      'Navami',       'Dashami',
-    'Ekadashi',    'Dwadashi',    'Thrayodashi',  'Chaturdashi',  'Amavasya'
+    'ಪಾಡ್ಯ',       'ಬಿದಿಗೆ',      'ತದಿಗೆ',      'ಚೌತಿ',      'ಪಂಚಮಿ',
+    'ಷಷ್ಠಿ',    'ಸಪ್ತಮಿ',    'ಅಷ್ಟಮಿ',      'ನವಮಿ',       'ದಶಮಿ',
+    'ಏಕಾದಶಿ',    'ದ್ವಾದಶಿ',    'ತ್ರಯೋದಶಿ',  'ಚತುರ್ದಶಿ',  'ಹುಣ್ಣಿಮೆ',
+    'ಪಾಡ್ಯ',       'ಬಿದಿಗೆ',      'ತದಿಗೆ',      'ಚೌತಿ',      'ಪಂಚಮಿ',
+    'ಷಷ್ಠಿ',    'ಸಪ್ತಮಿ',    'ಅಷ್ಟಮಿ',      'ನವಮಿ',       'ದಶಮಿ',
+    'ಏಕಾದಶಿ',    'ದ್ವಾದಶಿ',    'ತ್ರಯೋದಶಿ',  'ಚತುರ್ದಶಿ',  'ಅಮಾವಾಸ್ಯೆ'
 ];
 
 const NAKSHATRA_NAMES = [
     '',
-    'Ashvini',      'Bharani',      'Kriththika',   'Rohini',
-    'Mrigashira',   'Aridra',       'Punarvasu',    'Pushya',
-    'Ashlesha',     'Makha',        'Pubba',        'Uttare',
-    'Hastha',       'Chitha',       'Swathi',       'Vishakha',
-    'Anuradha',     'Jyestha',      'Mula',         'Poorvashada',
-    'Uttarashada',  'Shravana',     'Dhanishtha',   'Shathabhisha',
-    'Poorvabhadra', 'Uttarabhadra', 'Revathi'
+    'ಅಶ್ವಿನಿ',      'ಭರಣಿ',      'ಕೃತ್ತಿಕೆ',   'ರೋಹಿಣಿ',
+    'ಮೃಗಶಿರ',   'ಆರ್ದ್ರ',       'ಪುನರ್ವಸು',    'ಪುಷ್ಯ',
+    'ಆಶ್ಲೇಷ',     'ಮಖ',        'ಪೂರ್ವ',        'ಉತ್ತರ',
+    'ಹಸ್ತ',       'ಚಿತ್ತ',       'ಸ್ವಾತಿ',       'ವಿಶಾಖ',
+    'ಅನುರಾಧ',     'ಜ್ಯೇಷ್ಠ',      'ಮೂಲ',         'ಪೂರ್ವಾಷಾಢ',
+    'ಉತ್ತರಾಷಾಢ',  'ಶ್ರವಣ',     'ಧನಿಷ್ಠ',     'ಶತಭಿಷ',
+    'ಪೂರ್ವಭಾದ್ರ', 'ಉತ್ತರಭಾದ್ರ', 'ರೇವತಿ'
 ];
 
 const YOGA_NAMES = [
-    'Vishkambha', 'Priti',    'Ayushman',  'Saubhagya', 'Shobhana',
-    'Atiganda',   'Sukarma',  'Dhriti',    'Shula',     'Ganda',
-    'Vriddhi',    'Dhruva',   'Vyaghata',  'Harshana',  'Vajra',
-    'Siddhi',     'Vyatipata','Variyana',  'Parigha',   'Shiva',
-    'Siddha',     'Sadhya',   'Shubha',    'Shukla',    'Brahma',
-    'Indra',      'Vaidhriti'
+    'ವಿಷ್ಕಂಭ', 'ಪ್ರೀತಿ',    'ಆಯುಷ್ಮಾನ',  'ಸೌಭಾಗ್ಯ', 'ಶೋಭನ',
+    'ಅತಿಗಂಡ',   'ಸುಕರ್ಮ',  'ಧೃತಿ',    'ಶೂಲ',     'ಗಂಡ',
+    'ವೃದ್ಧಿ',    'ಧ್ರುವ',   'ವ್ಯಾಘಾತ',  'ಹರ್ಷಣ',  'ವಜ್ರ',
+    'ಸಿದ್ಧಿ',     'ವ್ಯತೀಪಾತ','ವರೀಯಾನ',  'ಪರಿಘ',   'ಶಿವ',
+    'ಸಿದ್ಧ',     'ಸಾಧ್ಯ',   'ಶುಭ',    'ಶುಕ್ಲ',  'ಬ್ರಹ್ಮ',
+    'ಇಂದ್ರ',      'ವೈಧೃತಿ'
 ];
 
 const KARANA_NAMES = [
-    'Kimstughna',   // 0 fixed
-    'Bava',         // 1 repeating
-    'Balava',       // 2
-    'Kaulava',      // 3
-    'Taitila',      // 4
-    'Garaja',       // 5
-    'Vanija',       // 6
-    'Vishti',       // 7 (Bhadra)
-    'Shakuni',      // 8 fixed
-    'Chatushpada',  // 9 fixed
-    'Naga'          // 10 fixed
+    'ಕಿಂಸ್ತುಘ್ನ',   // 0 fixed
+    'ಬವ',         // 1 repeating
+    'ಬಾಲವ',       // 2
+    'ಕೌಲವ',      // 3
+    'ತೈತಿಲ',      // 4
+    'ಗರಜ',       // 5
+    'ವಣಿಜ',      // 6
+    'ವಿಷ್ಟಿ',      // 7 (Bhadra)
+    'ಶಕುನಿ',      // 8 fixed
+    'ಚತುಷ್ಪಾದ',  // 9 fixed
+    'ನಾಗ'          // 10 fixed
 ];
 
 const RASHI_NAMES = [
-    'Mesha',     'Vrushabha', 'Mithuna',   'Karkataka',
-    'Simha',     'Kanya',     'Tula',      'Vrushchika',
-    'Dhanur',    'Makara',    'Khumbha',   'Meena'
+    'ಮೇಷ',     'ವೃಷಭ', 'ಮಿಥುನ',   'ಕರ್ಕಾಟಕ',
+    'ಸಿಂಹ',     'ಕನ್ಯ',     'ತುಲ',      'ವೃಶ್ಚಿಕ',
+    'ಧನುರ್',    'ಮಕರ',   'ಕುಂಭ',   'ಮೀನ'
 ];
 
 const RASHI_FULL_NAMES = [
-    'Mesha',     'Vrushabha', 'Mithuna',   'Karkataka',
-    'Simha',     'Kanya',     'Thula',     'Vrushchika',
-    'Dhanus',    'Makara',    'Kumbha',    'Meena'
+    'ಮೇಷ',     'ವೃಷಭ', 'ಮಿಥುನ',   'ಕರ್ಕಾಟಕ',
+    'ಸಿಂಹ',     'ಕನ್ಯ',     'ತುಲ',     'ವೃಶ್ಚಿಕ',
+    'ಧನಸ್ಸು',    'ಮಕರ',    'ಕುಂಭ',    'ಮೀನ'
 ];
 
 const LUNAR_MONTH_NAMES = [
     '',
-    'Chaitra',   'Vaishakha', 'Jyeshta',    'Ashadha',
-    'Shravana',  'Bhadrapada','Ashvayuja',  'Karthika',
-    'Margashira','Pushya',    'Magha',      'Palguna'
+    'ಚೈತ್ರ',   'ವೈಶಾಖ', 'ಜ್ಯೇಷ್ಠ',    'ಆಷಾಢ',
+    'ಶ್ರಾವಣ',  'ಭಾದ್ರಪದ','ಅಶ್ವಯುಜ',  'ಕಾರ್ತಿಕ',
+    'ಮಾರ್ಗಶಿರ','ಪುಷ್ಯ',    'ಮಾಘ',      'ಫಾಲ್ಗುಣ'
 ];
 
 const SOURA_MONTH_NAMES = [
     '',
-    'Mesha',     'Vrushabha', 'Mithuna',   'Karkataka',
-    'Simha',     'Kanya',     'Tula',      'Vrushchika',
-    'Dhanus',    'Makara',    'Khumbha',   'Meena'
+    'ಮೇಷ',     'ವೃಷಭ', 'ಮಿಥುನ',   'ಕರ್ಕಾಟಕ',
+    'ಸಿಂಹ',     'ಕನ್ಯ',     'ತುಲ',      'ವೃಶ್ಚಿಕ',
+    'ಧನಸ್ಸು',    'ಮಕರ',    'ಕುಂಭ',   'ಮೀನ'
 ];
 
 // ---------------------------------------------------------------------------
@@ -2585,42 +2585,42 @@ const SOURA_MONTH_NAMES = [
 // ---------------------------------------------------------------------------
 
 const FESTIVAL_NAMES = {
-    1:  'Ugadi',
-    2:  'Rama Navami',
-    3:  'Arakalagudu Vasanthalakshmi vaideeka',
-    4:  'Bengaluru Karaga - Chitra Poornime',
-    5:  'Shankara Jayanthi',
-    6:  'Narasimha Jayanthi',
-    7:  'Prathama Ekadashi',
-    8:  'Jyothirbheemeshvara Vratha, Bheemana Amavasya',
-    9:  'Nagara Panchami',
-    10: 'Siriyala Shrashti',
-    11: 'Raksha bandhana, Yajur Upakarma',
-    12: 'Sri Krishna Janmashtami',
-    13: 'Swarna Gouri Vratha',
-    14: 'VaraSidhdhiVinayaka Vratha',
-    15: 'Rushi Panchami',
-    16: 'Arakalagudu Nanjundayyanavara Vaideeka',
-    17: 'Anantha Padmanabha Vratha',
-    19: 'Mahalaya Amavasya',
-    20: 'Sharannavaratre Aarambha, Navaratre Padya',
-    21: 'Durga Ashtami',
-    22: 'Maha Navami',
-    23: 'Vijaya Dashami',
-    24: 'Deepavali - Neerutumbuva Habba',
-    25: 'Deepavali - Naraka Chaturdashi',
-    26: 'Deepavali - Dhana Lakshmi Pooja',
-    27: 'Deepavali - Balipadyami, Baleendra pooja',
-    28: 'Chikka Deepavali - Uththaana Dwaadashi',
-    29: 'Laksha Deepa Amavasya',
-    30: 'Subhramanya Shrashti',
-    31: 'Vaikunta Ekadashi',
-    32: 'Ratha Sapthami, Ekkadele snaana',
-    33: 'Maha Shivaraathri',
-    34: 'Arakalagudu Amrutheshvaraswami Rathothsava',
-    35: 'Holi habba, Arakalagudu Lakshminarasimhaswami Rathothsava',
-    36: 'RaviPrakashaMurthy Vaidika',
-    37: 'Sarojammanavara Vaidika'
+    1:  'ಉಗಾದಿ',
+    2:  'ರಾಮ ನವಮಿ',
+    3:  'ಅರಕಲಗೂಡು ವಸಂತಲಕ್ಷ್ಮಿ ವೈದಿಕ',
+    4:  'ಬೆಂಗಳೂರು ಕರಗ - ಚಿತ್ರ ಹುಣ್ಣಿಮೆ',
+    5:  'ಶಂಕರ ಜಯಂತಿ',
+    6:  'ನರಸಿಂಹ ಜಯಂತಿ',
+    7:  'ಪ್ರಥಮ ಏಕಾದಶಿ',
+    8:  'ಜ್ಯೋತಿರ್ಭೀಮೇಶ್ವರ ವ್ರತ, ಭೀಮನ ಅಮಾವಾಸ್ಯೆ',
+    9:  'ನಾಗರ ಪಂಚಮಿ',
+    10: 'ಸಿರಿಯಾಳ ಷಷ್ಠಿ',
+    11: 'ರಕ್ಷಾ ಬಂಧನ, ಯಜುರ್ ಉಪಾಕರ್ಮ',
+    12: 'ಶ್ರೀ ಕೃಷ್ಣ ಜನ್ಮಾಷ್ಟಮಿ',
+    13: 'ಸ್ವರ್ಣ ಗೌರಿ ವ್ರತ',
+    14: 'ವರಸಿದ್ಧಿ ವಿನಾಯಕ ವ್ರತ',
+    15: 'ಋಷಿ ಪಂಚಮಿ',
+    16: 'ಅರಕಲಗೂಡು ನಂಜುಂಡಯ್ಯನವರ ವೈದಿಕ',
+    17: 'ಅನಂತ ಪದ್ಮನಾಭ ವ್ರತ',
+    19: 'ಮಹಾಳಯ ಅಮಾವಾಸ್ಯೆ',
+    20: 'ಶರನ್ನವರಾತ್ರೆ ಆರಂಭ, ನವರಾತ್ರಿ ಪಾಡ್ಯ',
+    21: 'ದುರ್ಗಾ ಅಷ್ಟಮಿ',
+    22: 'ಮಹಾ ನವಮಿ',
+    23: 'ವಿಜಯ ದಶಮಿ',
+    24: 'ದೀಪಾವಳಿ - ನೀರು ತುಂಬುವ ಹಬ್ಬ',
+    25: 'ದೀಪಾವಳಿ - ನರಕ ಚತುರ್ದಶಿ',
+    26: 'ದೀಪಾವಳಿ - ಧನ ಲಕ್ಷ್ಮಿ ಪೂಜೆ',
+    27: 'ದೀಪಾವಳಿ - ಬಲಿ ಪಾಡ್ಯಮಿ, ಬಲೀಂದ್ರ ಪೂಜೆ',
+    28: 'ಚಿಕ್ಕ ದೀಪಾವಳಿ - ಉತ್ಥಾನ ದ್ವಾದಶಿ',
+    29: 'ಲಕ್ಷ ದೀಪ ಅಮಾವಾಸ್ಯೆ',
+    30: 'ಸುಬ್ರಮಣ್ಯ ಷಷ್ಠಿ',
+    31: 'ವೈಕುಂಠ ಏಕಾದಶಿ',
+    32: 'ರಥ ಸಪ್ತಮಿ, ಎಕ್ಕಡೆಲೆ ಸ್ನಾನ',
+    33: 'ಮಹಾ ಶಿವರಾತ್ರಿ',
+    34: 'ಅರಕಲಗೂಡು ಅಮೃತೇಶ್ವರಸ್ವಾಮಿ ರಥೋತ್ಸವ',
+    35: 'ಹೋಳಿ ಹಬ್ಬ, ಅರಕಲಗೂಡು ಲಕ್ಷ್ಮೀನರಸಿಂಹಸ್ವಾಮಿ ರಥೋತ್ಸವ',
+    36: 'ರವಿಪ್ರಕಾಶಮೂರ್ತಿ ವೈದಿಕ',
+    37: 'ಸರೋಜಮ್ಮನವರ ವೈದಿಕ'
 };
 
 // Festival map: key = month * 30 + thithi + 1, value = festival code
@@ -2681,20 +2681,20 @@ function detectSpecialFestival(state, festMonth) {
     // Varamahalakshmi: Friday (vara 5) in Shravana month (festmonth 4), tithi 7-14
     if (state.thithiIndex >= 7 && state.thithiIndex < 15
         && state.varaIndex === 5 && festMonth === 4) {
-        return 'Varamahalakshmi shukravara';
+        return 'ವರಮಹಾಲಕ್ಷ್ಮಿ ಶುಕ್ರವಾರ';
     }
     // Rugveda Upakarma: Shravana nakshatra (22) in Shravana month (4)
     if (state.nakIndex === 22 && festMonth === 4) {
-        return 'Rugveda Upakarma';
+        return 'ಋಗ್ವೇದ ಉಪಾಕರ್ಮ';
     }
     // Navarathri Saraswathi Pooja: Jyeshta nakshatra (18) in Ashvayuja (6)
     if (festMonth === 6 && state.nakIndex === 18) {
-        return 'Navarathri Saraswathi Pooja';
+        return 'ನವರಾತ್ರಿ ಸರಸ್ವತಿ ಪೂಜೆ';
     }
     // Makara Sankranthi: Sun sidereal lon ≈ 270°
     const sunSidereal = mod360(state.sunSiderealLon - state.ayanamsha);
     if (sunSidereal > 270.0 && sunSidereal < 271.0) {
-        return 'Makara Sankranthi';
+        return 'ಮಕರ ಸಂಕ್ರಾಂತಿ';
     }
     return null;
 }
@@ -2772,7 +2772,7 @@ function computeFullPanchanga(params) {
     const kethuLon = mod360(rahuLon + 180.0);
 
     // Paksha
-    const paksha = state.thithiIndex < 15 ? 'Shukla' : 'Krishna';
+    const paksha = state.thithiIndex < 15 ? 'ಶುಕ್ಲ' : 'ಕೃಷ್ಣ';
 
     // Soura (solar) month
     const souraMonthFrac  = mod360(state.sunSiderealLon - state.ayanamsha) / 30.0;
@@ -2817,7 +2817,7 @@ function computeFullPanchanga(params) {
     // Vaideeka observances always use the query-time tithi unchanged.
     const festMonth = monthIndex - 1;  // 0-based
 
-    const isVaideeka = (name) => name && (name.toLowerCase().includes('vaideeka') || name.toLowerCase().includes('vaidika'));
+    const isVaideeka = (name) => name && (name.toLowerCase().includes('ವೈದಿಕ'));
 
     const tblAtSunrise = lookupFestival(festMonth, sunriseState.thithiIndex);
     const tblAtQuery   = lookupFestival(festMonth, state.thithiIndex);
@@ -3134,7 +3134,7 @@ function computeFullPanchanga(params) {
             // another condition — e.g. Varamahalakshmi — is checked first in the chain).
             // Specifically: if specAtPm330Today is Rugveda Upakarma and tomorrow's sunrise
             // has Shravana nakshatra in Shravana month, suppress today.
-            const rugvedaName = 'Rugveda Upakarma';
+            const rugvedaName = 'ಋಗ್ವೇದ ಉಪಾಕರ್ಮ';
             const nextSrAlsoHasRugveda = (specAtPm330Today === rugvedaName)
                 && (nextSunriseStateb.nakIndex === 22 && nextFestMonth === 4);
             if (!isWeekdayDupFirstPm && !nextSrAlsoHasRugveda
@@ -3208,8 +3208,8 @@ function computeFullPanchanga(params) {
                     // probe result if tomorrow's sunrise nakshatra independently satisfies
                     // the same nakshatra condition — even when detectSpecialFestival returns
                     // a different festival for tomorrow (e.g. Varamahalakshmi on a Friday).
-                    const rugvedaName = 'Rugveda Upakarma';
-                    const saraswathiName = 'Navarathri Saraswathi Pooja';
+                    const rugvedaName = 'ಋಗ್ವೇದ ಉಪಾಕರ್ಮ';
+                    const saraswathiName = 'ನವರಾತ್ರಿ ಸರಸ್ವತಿ ಪೂಜೆ';
                     const probeNakSuppressed =
                         (specAtProbe === rugvedaName
                             && nextSunriseStateb.nakIndex === 22 && nextFestMonth === 4)
@@ -3229,7 +3229,7 @@ function computeFullPanchanga(params) {
     // here: if today (at sunrise) has Shravana nakshatra in Shravana month and
     // Rugveda Upakarma is not already in specFestivals, fire it today.
     // Apply the same isTithiDupFirst-override logic as for Varamahalakshmi.
-    const rugvedaName = 'Rugveda Upakarma';
+    const rugvedaName = 'ಋಗ್ವೇದ ಉಪಾಕರ್ಮ';
     if (sunriseState.nakIndex === 22 && festMonth === 4
             && !specFestivals.includes(rugvedaName)
             && specAtSunrise !== rugvedaName) {
@@ -3443,15 +3443,15 @@ function computeFullPanchanga(params) {
     }
 
     const grahas = [
-        { name: 'Ravi',    lon: state.sunSiderealLon },
-        { name: 'Chandra', lon: state.moonSiderealLon },
-        { name: 'Mangala', lon: planets.mangalaRA },
-        { name: 'Budha',   lon: planets.budhaRA },
-        { name: 'Guru',    lon: planets.guruRA },
-        { name: 'Shukra',  lon: planets.shukraRA },
-        { name: 'Shani',   lon: planets.shaniRA },
-        { name: 'Rahu',    lon: rahuLon },
-        { name: 'Kethu',   lon: kethuLon }
+        { name: 'ರವಿ',    lon: state.sunSiderealLon },
+        { name: 'ಚಂದ್ರ', lon: state.moonSiderealLon },
+        { name: 'ಮಂಗಳ', lon: planets.mangalaRA },
+        { name: 'ಬುಧ',   lon: planets.budhaRA },
+        { name: 'ಗುರು',    lon: planets.guruRA },
+        { name: 'ಶುಕ್ರ',  lon: planets.shukraRA },
+        { name: 'ಶನಿ',   lon: planets.shaniRA },
+        { name: 'ರಾಹು',    lon: rahuLon },
+        { name: 'ಕೇತು',   lon: kethuLon }
     ].map(g => ({
         name:    g.name,
         lon:     g.lon,
@@ -3531,9 +3531,9 @@ if (typeof module !== 'undefined' && module.exports) {
 
 // Rashi names (1-based index 1..12) for display
 const RASHI_NAMES_DISP = [
-  '', 'Mesha','Vrushabha','Mithuna','Karkataka',
-  'Simha','Kanya','Tula','Vrushchika',
-  'Dhanur','Makara','Khumbha','Meena'
+  '', 'ಮೇಷ','ವೃಷಭ','ಮಿಥುನ','ಕರ್ಕಾಟಕ',
+  'ಸಿಂಹ','ಕನ್ಯ','ತುಲ','ವೃಶ್ಚಿಕ',
+  'ಧನುರ್','ಮಕರ','ಕುಂಭ','ಮೀನ'
 ];
 
 // City presets
@@ -3573,15 +3573,15 @@ const NI_CELLS = [
 
 // Graha acronyms for compact chart display
 const GRAHA_ABBR = {
-  'Ravi':    'Rav',
-  'Chandra': 'Cha',
-  'Mangala': 'Man',
-  'Budha':   'Bud',
-  'Guru':    'Gur',
-  'Shukra':  'Shu',
-  'Shani':   'Sha',
-  'Rahu':    'Rah',
-  'Kethu':   'Ket'
+  'ರವಿ':    'ರವಿ',
+  'ಚಂದ್ರ': 'ಚಂದ್ರ',
+  'ಮಂಗಳ': 'ಮಂಗಳ',
+  'ಬುಧ':   'ಬುಧ',
+  'ಗುರು':    'ಗುರು',
+  'ಶುಕ್ರ':  'ಶುಕ್ರ',
+  'ಶನಿ':   'ಶನಿ',
+  'ರಾಹು':    'ರಾಹು',
+  'ಕೇತು':   'ಕೇತು'
 };
 
 function abbr(name) {
@@ -3592,8 +3592,8 @@ function buildNatalCharts(r) {
   const lagnaRashi    = RASHI_NAMES_DISP.indexOf(r.lagna);
   const navLagnaRashi = RASHI_NAMES_DISP.indexOf(r.navamshaLagna);
 
-  renderChart('rashiChart',    lagnaRashi,    r.grahas, g => g.rashi,          'Rashi');
-  renderChart('navamshaChart', navLagnaRashi, r.grahas, g => g.navamsha || 12, 'Navamsha');
+  renderChart('rashiChart',    lagnaRashi,    r.grahas, g => g.rashi,          'ರಾಶಿ');
+  renderChart('navamshaChart', navLagnaRashi, r.grahas, g => g.navamsha || 12, 'ನವಾಂಶ');
 
   document.getElementById('natalCharts').style.display = 'grid';
 }
@@ -3634,7 +3634,7 @@ function renderChart(containerId, lagnaRashi, grahas, getRashi, label) {
         ? names.map(n => `<span class="graha-list">${n}</span>`).join('')
         : `<span class="graha-list">${names.join(', ')}</span>`;
       html += `<div class="ni-cell${cell.isLagna ? ' lagna-cell' : ''}">` +
-        (cell.isLagna ? `<span class="lagna-label">Lag</span>` : '') +
+        (cell.isLagna ? `<span class="lagna-label">ಲಗ್ನ</span>` : '') +
         grahaHtml + `</div>`;
     }
   }
@@ -3716,7 +3716,7 @@ function calculate() {
   const timeStr = document.getElementById('inputTime').value;
   const fpDate  = datePicker.selectedDates[0];
   if (!fpDate || !timeStr) {
-    showError('Please enter a valid date and time.');
+    showError('ದಯವಿಟ್ಟು ಮಾನ್ಯ ದಿನಾಂಕ ಮತ್ತು ಸಮಯ ನಮೂದಿಸಿ.');
     return;
   }
 
@@ -3735,7 +3735,7 @@ function calculate() {
     lat = parseFloat(document.getElementById('inputLat').value);
     lon = parseFloat(document.getElementById('inputLon').value);
     if (isNaN(lat) || isNaN(lon)) {
-      showError('Invalid coordinates.');
+      showError('ಅಮಾನ್ಯ ನಿರ್ದೇಶಾಂಕಗಳು.');
       return;
     }
   } else {
@@ -3761,7 +3761,7 @@ function calculate() {
       displayResult(result, { metaDate, metaTime, cityName });
     } catch (err) {
       console.error(err);
-      showError('Calculation error: ' + err.message);
+      showError('ಲೆಕ್ಕಾಚಾರ ದೋಷ: ' + err.message);
     } finally {
       spinnerEl.classList.remove('visible');
       calcBtn.disabled = false;
@@ -3791,22 +3791,22 @@ function displayResult(r, meta) {
 
   // Tithi mini-card
   document.getElementById('mc-tithi').textContent = r.tithi;
-  const tithiPaksha = r.tithiIndex < 15 ? 'Shukla' : 'Krishna';
+  const tithiPaksha = r.tithiIndex < 15 ? 'ಶುಕ್ಲ' : 'ಕೃಷ್ಣ';
   document.getElementById('mc-tithi-sub').textContent =
     `${tithiPaksha} · ${r.tithiIndex + 1} / 30`;
   const tithiElapsed = 100 - r.tithiRemPct;
   document.getElementById('pb-tithi').style.width  = tithiElapsed.toFixed(1) + '%';
   document.getElementById('pct-tithi').textContent =
-    tithiElapsed.toFixed(1) + '% · ' + r.tithiRemPct.toFixed(1) + '% remaining';
+    tithiElapsed.toFixed(1) + '% · ' + r.tithiRemPct.toFixed(1) + '% ಬಾಕಿ ಇದೆ';
 
   // Nakshatra mini-card
   document.getElementById('mc-nak').textContent = r.nakshatra;
   document.getElementById('mc-nak-sub').textContent =
-    `Pada ${r.pada} · ${r.nakshatraIndex} / 27`;
+    `ಪಾದ ${r.pada} · ${r.nakshatraIndex} / 27`;
   const nakElapsed = 100 - r.nakshatraRemPct;
   document.getElementById('pb-nak').style.width  = nakElapsed.toFixed(1) + '%';
   document.getElementById('pct-nak').textContent =
-    nakElapsed.toFixed(1) + '% · ' + r.nakshatraRemPct.toFixed(1) + '% remaining';
+    nakElapsed.toFixed(1) + '% · ' + r.nakshatraRemPct.toFixed(1) + '% ಬಾಕಿ ಇದೆ';
 
   // Sunrise / sunset row
   document.getElementById('sr-time').textContent  = r.sunriseIST;
@@ -3815,16 +3815,16 @@ function displayResult(r, meta) {
 
   // Calendar table
   const calRows = [
-    ['Samvatsara',   r.yearName],
-    ['Masa',         r.lunarMonth],
-    ['Paksha',       r.paksha],
-    ['Soura Masa',   `${r.souraMonth}  ·  Tedi ${r.souraTithi}`],
-    ['Vara',         r.vara],
-    ['Tithi',        `${r.tithi}  (${r.tithiIndex + 1})`],
-    ['Nakshatra',    `${r.nakshatra}  ·  Pada ${r.pada}`],
-    ['Yoga',         r.yoga],
-    ['Karana',       r.karana],
-    ['Rashi',        r.rashi]
+    ['ಸಂವತ್ಸರ',   r.yearName],
+    ['ಮಾಸ',         r.lunarMonth],
+    ['ಪಕ್ಷ',       r.paksha],
+    ['ಸೌರ ಮಾಸ',   `${r.souraMonth}  ·  ತೇದಿ ${r.souraTithi}`],
+    ['ವಾರ',         r.vara],
+    ['ತಿಥಿ',        `${r.tithi}  (${r.tithiIndex + 1})`],
+    ['ನಕ್ಷತ್ರ',    `${r.nakshatra}  ·  ಪಾದ ${r.pada}`],
+    ['ಯೋಗ',         r.yoga],
+    ['ಕರಣ',       r.karana],
+    ['ರಾಶಿ',        r.rashi]
   ];
   const calTbody = document.getElementById('calendarTable');
   calTbody.innerHTML = calRows.map(([k, v]) =>
@@ -3833,10 +3833,10 @@ function displayResult(r, meta) {
 
   // Lagna table
   const lagnaRows = [
-    ['Lagna',          r.lagna],
-    ['Navamsha Lagna', r.navamshaLagna],
-    ['Moon Rashi',     r.rashi],
-    ['Ayanamsha',      r.ayanamsha + '°  (Lahiri)']
+    ['ಲಗ್ನ',          r.lagna],
+    ['ನವಾಂಶ ಲಗ್ನ', r.navamshaLagna],
+    ['ಚಂದ್ರ ರಾಶಿ',     r.rashi],
+    ['ಅಯನಾಂಶ',      r.ayanamsha + '°  (ಲಾಹಿರಿ)']
   ];
   const lagnaTbody = document.getElementById('lagnaTable');
   lagnaTbody.innerHTML = lagnaRows.map(([k, v]) =>
@@ -3872,12 +3872,12 @@ function displayResult(r, meta) {
     // Currently in the adhika month itself
     document.getElementById('adhikaBadge').style.display = 'inline-flex';
     document.getElementById('adhikaName').textContent =
-      r.adhikaMonthName + ' — Intercalary Month';
+      r.adhikaMonthName + ' — ಅಧಿಕ ಮಾಸ';
   } else if (r.hasAdhikaMonth) {
     // Adhika month occurs this Vedic year but not today
     document.getElementById('adhikaBadge').style.display = 'inline-flex';
     document.getElementById('adhikaName').textContent =
-      'This Vedic year has ' + r.adhikaMonthName;
+      'ಈ ವೈದಿಕ ವರ್ಷದಲ್ಲಿ ' + r.adhikaMonthName + ' ಇದೆ';
   } else {
     document.getElementById('adhikaBadge').style.display = 'none';
   }
