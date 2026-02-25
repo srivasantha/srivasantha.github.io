@@ -2302,20 +2302,56 @@ function findYearStart(j2000Day, dateInfoTemplate) {
         monthStarts[month] = day;
     }
 
-    return { monthStarts, hasAdhika, adhikaIndex, adhikaStart, adhikaName };
+    // Detect kshaya month: a lunar month that contains no Amavasya at sunrise.
+    //
+    // Strategy: for each month, scan its integer calendar days [startInt, endInt-1]
+    // for any day where sunrise tithi = 29.  If none found, check the first day of
+    // the next month (endInt): if that day's sunrise tithi is 0 (Pratipada), then
+    // the Amavasya that ended the current month happened entirely between two
+    // sunrises — the month is kshaya.  (If endInt has tithi 29, the Amavasya is
+    // at the last sunrise of the current month, which is normal.)
+    const kshayaSunriseUT = 0.021;   // ~30 min UT ≈ 6:00 am IST
+    let kshayaIndex = -1;
+    for (let m = 1; m <= 11; m++) {
+        const startInt = Math.floor(monthStarts[m - 1]);
+        const endInt   = Math.floor(monthStarts[m]);
+        let foundInside = false;
+        for (let d = startInt; d < endInt; d++) {
+            const ds = computePanchanga(d + kshayaSunriseUT, makeDateInfoForDay(d + kshayaSunriseUT, dateInfoTemplate));
+            if (ds.thithiIndex === 29) { foundInside = true; break; }
+        }
+        if (!foundInside) {
+            // No sunrise Amavasya inside the month. Check if endInt has tithi 0:
+            // if so, the Amavasya was invisible at sunrise and the month is kshaya.
+            const endDayState = computePanchanga(
+                endInt + kshayaSunriseUT,
+                makeDateInfoForDay(endInt + kshayaSunriseUT, dateInfoTemplate)
+            );
+            if (endDayState.thithiIndex === 0) {
+                kshayaIndex = m;
+                break;
+            }
+        }
+    }
+
+    return { monthStarts, hasAdhika, adhikaIndex, adhikaStart, adhikaName, kshayaIndex };
 }
 
 /**
  * Determine current Vedic lunar month from precomputed month starts.
+ * @param {number} sunriseTithiIndex  tithi index (0-29) at sunrise; pass -1 if unknown
+ * @param {number} kshayaIndex        1-based index of the kshaya month (-1 if none)
  * @returns {{monthIndex: number, isAdhika: boolean}}  monthIndex is 1-based
  */
-function findCurrentMonth(j2000Day, monthStarts, hasAdhika, adhikaStart) {
+function findCurrentMonth(j2000Day, monthStarts, hasAdhika, adhikaStart, sunriseTithiIndex, kshayaIndex) {
     let month = 12;   // default: Phalguna
 
     // Use floor(monthStarts) so the new month begins on the calendar day that
     // Padya first appears, regardless of the sub-day transition time.
     for (let i = 0; i < 11; i++) {
-        if (j2000Day >= Math.floor(monthStarts[i]) && j2000Day < Math.floor(monthStarts[i + 1])) {
+        const thisFloor = Math.floor(monthStarts[i]);
+        const nextFloor = Math.floor(monthStarts[i + 1]);
+        if (j2000Day >= thisFloor && j2000Day < nextFloor) {
             month = i + 1;
             break;
         }
@@ -2324,6 +2360,52 @@ function findCurrentMonth(j2000Day, monthStarts, hasAdhika, adhikaStart) {
     let isAdhika = false;
     if (hasAdhika && j2000Day >= adhikaStart && (j2000Day - adhikaStart) < 29.0) {
         isAdhika = true;
+    }
+
+    // Edge case A/B: Pratipada (tithi 0) begins after sunrise on the first
+    // calendar day of a new lunar month.  At sunrise the tithi is still
+    // Amavasya (29) — the closing tithi of the month that just ended.
+    //
+    // A) Preceded by a regular month (e.g. 2026: Jyeshta → Ashadha, Jul 14).
+    //    The Amavasya belongs to the regular preceding month.
+    //    Fix: step month back by 1 so the festival lookup uses the right month.
+    //
+    // B) Preceded by an adhika month (e.g. 2023: Adhika Shravana → Shravana,
+    //    Aug 16).  The Amavasya belongs to the adhika month, which suppresses
+    //    all non-vaideeka festivals.
+    //    Fix: set isAdhika = true.
+    //
+    // Detect: sunrise is Amavasya AND today is the first calendar day of the
+    // current month AND sunrise is before the fractional Pratipada transition.
+    if (sunriseTithiIndex === 29 && !isAdhika) {
+        const monthIdx0 = month - 1;   // 0-based index into monthStarts
+        if (monthIdx0 >= 0 && monthIdx0 <= 11) {
+            const monthStartFrac = monthStarts[monthIdx0];
+            if (monthStartFrac !== undefined &&
+                Math.floor(j2000Day) === Math.floor(monthStartFrac) &&
+                j2000Day < monthStartFrac) {
+                if (hasAdhika && adhikaStart !== undefined &&
+                    j2000Day >= adhikaStart + 27.0) {
+                    // Sub-case B: adhika month immediately preceded this one.
+                    isAdhika = true;
+                } else {
+                    // Sub-case A: regular month preceded this one.
+                    month = month - 1;
+                    if (month < 1) month = 12;
+                }
+            }
+        }
+    }
+
+    // Edge case C: kshaya month (e.g. Ashadha 2028).
+    // A lunar month that contains no Amavasya at sunrise is kshaya.  The
+    // Amavasya in the month immediately before the kshaya month is traditionally
+    // observed as the kshaya month's Amavasya.
+    // kshayaIndex (computed by findYearStart) is the 1-based index of the kshaya
+    // month; if today is Amavasya in month kshayaIndex-1, promote to kshayaIndex.
+    if (sunriseTithiIndex === 29 && !isAdhika &&
+        kshayaIndex > 1 && month === kshayaIndex - 1) {
+        month = kshayaIndex;
     }
 
     return { monthIndex: month, isAdhika };
@@ -2659,7 +2741,9 @@ function computeFullPanchanga(params) {
         sunriseJ2000,
         yearStartResult.monthStarts,
         yearStartResult.hasAdhika,
-        yearStartResult.adhikaStart
+        yearStartResult.adhikaStart,
+        sunriseState.thithiIndex,
+        yearStartResult.kshayaIndex
     );
 
     // Re-run at original time to get fest-time state
