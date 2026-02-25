@@ -2601,7 +2601,8 @@ const FESTIVAL_MAP = {
     240: 29,  // Laksha Deepa
     245: 30,  // Subhramanya Shrashti
     250: 37,  // SarojammaVaidika
-    281: 31,  // Vaikunta Ekadashi
+    251: 31,  // Vaikunta Ekadashi (Margashira Shukla Ekadashi — Dhanurmasa case)
+    281: 31,  // Vaikunta Ekadashi (Pushya Shukla Ekadashi — usual case)
     307: 32,  // Ratha Sapthami
     329: 33,  // Maha Shivaraathri
     330: 34,  // Arakalagudu1
@@ -2759,7 +2760,7 @@ function computeFullPanchanga(params) {
     // Vaideeka observances always use the query-time tithi unchanged.
     const festMonth = monthIndex - 1;  // 0-based
 
-    const isVaideeka = (name) => name && name.toLowerCase().includes('vaideeka');
+    const isVaideeka = (name) => name && (name.toLowerCase().includes('vaideeka') || name.toLowerCase().includes('vaidika'));
 
     const tblAtSunrise = lookupFestival(festMonth, sunriseState.thithiIndex);
     const tblAtQuery   = lookupFestival(festMonth, state.thithiIndex);
@@ -2860,7 +2861,81 @@ function computeFullPanchanga(params) {
         specFestival = null;
     }
 
-    const festivalRaw   = tblFestival || specFestival || null;
+    let festivalRaw   = tblFestival || specFestival || null;
+
+    // -----------------------------------------------------------------------
+    // Vaikunta Ekadashi (code 31) deduplication guards.
+    //
+    // The festival can fire from two different map entries:
+    //   key 251 — festMonth 8 (Margashira) Shukla Ekadashi  (Dhanurmasa case)
+    //   key 281 — festMonth 9 (Pushya)     Shukla Ekadashi  (usual case)
+    //
+    // Guard A (key 251 — Margashira):
+    //   Only fire when the sun is sidereal in Dhanus (240°–270°), i.e. truly
+    //   within Dhanurmasa.  Also suppress if a Pushya Ekadashi (key 281) will
+    //   fire within the next 29 days — that means the upcoming Pushya month
+    //   has its own Ekadashi, which is the preferred date.
+    //
+    // Guard B (key 281 — Pushya, January only):
+    //   A rare calendar anomaly can place two separate Dhanurmasa Ekadashis
+    //   in the same Gregorian year (one in January, one in December).
+    //   When the current date is in January AND the sun sidereal is still in
+    //   Dhanus, suppress this date if December of the same Gregorian year
+    //   also produces a Vaikunta Ekadashi — the December date is preferred.
+    // -----------------------------------------------------------------------
+    if (festivalRaw === FESTIVAL_NAMES[31]) {
+        const sunSidForVE = mod360(sunriseState.sunSiderealLon - sunriseState.ayanamsha);
+        const inDhanusVE  = sunSidForVE >= 240.0 && sunSidForVE < 270.0;
+
+        if (festMonth === 8) {
+            // Guard A: Margashira Ekadashi — require Dhanurmasa sun position.
+            if (!inDhanusVE) {
+                festivalRaw = null;
+            } else {
+                // Also suppress if a Pushya Shukla Ekadashi fires within 29 days.
+                let hasUpcomingPushyaEK = false;
+                for (let offset = 1; offset <= 29 && !hasUpcomingPushyaEK; offset++) {
+                    const futJ    = sunriseJ2000 + offset;
+                    const futInfo = makeDateInfoForDay(futJ, dateInfo);
+                    const futSt   = computePanchanga(futJ, futInfo);
+                    if (futSt.thithiIndex === 10) {
+                        // Check if this future day's lunar month is Pushya (festMonth 9).
+                        const futYS = findYearStart(futJ, futInfo);
+                        const futM  = findCurrentMonth(
+                            futJ, futYS.monthStarts, futYS.hasAdhika,
+                            futYS.adhikaStart, futSt.thithiIndex, futYS.kshayaIndex
+                        );
+                        if ((futM.monthIndex - 1) === 9 && !futM.isAdhika) {
+                            hasUpcomingPushyaEK = true;
+                        }
+                    }
+                }
+                if (hasUpcomingPushyaEK) festivalRaw = null;
+            }
+        } else if (festMonth === 9 && month === 1 && inDhanusVE) {
+            // Guard B: Pushya Ekadashi in January while still in Dhanurmasa.
+            // Suppress if December of the same Gregorian year has a Vaikunta.
+            let hasDecVaikunta = false;
+            for (let d2 = 21; d2 <= 31 && !hasDecVaikunta; d2++) {
+                const decJ    = buildDateInfo(d2, 12, year, 6, 0,
+                                    longitude, latitude, tzHr, tzMin).j2000Day;
+                const decInfo = makeDateInfoForDay(decJ, dateInfo);
+                const decSt   = computePanchanga(decJ, decInfo);
+                if (decSt.thithiIndex === 10) {
+                    const decYS = findYearStart(decJ, decInfo);
+                    const decM  = findCurrentMonth(
+                        decJ, decYS.monthStarts, decYS.hasAdhika,
+                        decYS.adhikaStart, decSt.thithiIndex, decYS.kshayaIndex
+                    );
+                    if ((decM.monthIndex - 1) === 9 && !decM.isAdhika) {
+                        hasDecVaikunta = true;
+                    }
+                }
+            }
+            if (hasDecVaikunta) festivalRaw = null;
+        }
+    }
+
     const festival      = (isAdhika && !isVaideeka(festivalRaw)) ? null : festivalRaw;
 
     // Rashi for Moon
