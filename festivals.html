@@ -2676,8 +2676,9 @@ function lookupFestival(festMonth, festThithi) {
  * @returns {string|null}
  */
 function detectSpecialFestival(state, festMonth) {
-    // Varamahalakshmi: Friday (vara 5) in Shravana month (festmonth 4), tithi 7-14
-    if (state.thithiIndex >= 7 && state.thithiIndex < 15
+    // Varamahalakshmi: Friday (vara 5) in Shravana month (festmonth 4), tithi 7-13
+    // Must be *before* Purnima (index 14); upper bound is strictly < 14.
+    if (state.thithiIndex >= 7 && state.thithiIndex < 14
         && state.varaIndex === 5 && festMonth === 4) {
         return 'ವರಮಹಾಲಕ್ಷ್ಮಿ ಶುಕ್ರವಾರ';
     }
