@@ -2303,40 +2303,74 @@ function findYearStart(j2000Day, dateInfoTemplate) {
         monthStarts[month] = day;
     }
 
-    // Detect kshaya month: a lunar month that contains no Amavasya at sunrise.
+    // Detect kshaya month: a lunar month during which the Sun does NOT cross any
+    // rashi boundary (zero Sankrantis).  The Sun is moving so fast (near perihelion)
+    // that it spans an entire rashi within less than one synodic month, so this
+    // lunar month inherits no Sankranti and is expunged.  The adjacent month absorbs
+    // the extra Sankranti (shows 2 transitions).  Extremely rare (~once per century).
     //
-    // Strategy: for each month, scan its integer calendar days [startInt, endInt-1]
-    // for any day where sunrise tithi = 29.  If none found, check the first day of
-    // the next month (endInt): if that day's sunrise tithi is 0 (Pratipada), then
-    // the Amavasya that ended the current month happened entirely between two
-    // sunrises — the month is kshaya.  (If endInt has tithi 29, the Amavasya is
-    // at the last sunrise of the current month, which is normal.)
+    // Also find kshayaGapDay: the integer calendar day within the kshaya month's span
+    // on which the Amavasya falls entirely between two sunrises (no tithi-29 at sunrise
+    // that day, but tithi-29 ends before the next sunrise).  This tells findCurrentMonth
+    // to suppress the Amavasya-promotion for that specific day, preventing it from
+    // misfiring Deepavali on the preceding month's Amavasya.
     const kshayaSunriseUT = 0.021;   // ~30 min UT ≈ 6:00 am IST
     let kshayaIndex = -1;
-    let kshayaGapDay = -1;  // j2000 integer day that owns the between-sunrise Amavasya
+    let kshayaGapDay = -1;
     for (let m = 1; m <= 11; m++) {
         const startInt = Math.floor(monthStarts[m - 1]);
         const endInt   = Math.floor(monthStarts[m]);
-        let foundInside = false;
-        for (let d = startInt; d < endInt; d++) {
+        let prevRashi = -1, transitions = 0;
+        for (let d = startInt; d <= endInt; d++) {
             const ds = computePanchanga(d + kshayaSunriseUT, makeDateInfoForDay(d + kshayaSunriseUT, dateInfoTemplate));
-            if (ds.thithiIndex === 29) { foundInside = true; break; }
+            const rashi = Math.trunc(mod360(ds.sunSiderealLon - ds.ayanamsha) / 30.0);
+            const changed = (prevRashi >= 0) && (rashi - prevRashi !== 0);
+            if (changed) transitions++;
+            prevRashi = rashi;
         }
-        if (!foundInside) {
-            // No sunrise Amavasya inside the month. Check if endInt has tithi 0:
-            // if so, the Amavasya was invisible at sunrise and the month is kshaya.
-            // The Amavasya fell entirely between the last sunrise of this month
-            // (endInt - 1) and the first sunrise of the next (endInt); it will be
-            // detected by the between-sunrise probe on calendar day endInt - 1.
-            const endDayState = computePanchanga(
-                endInt + kshayaSunriseUT,
-                makeDateInfoForDay(endInt + kshayaSunriseUT, dateInfoTemplate)
-            );
-            if (endDayState.thithiIndex === 0) {
-                kshayaIndex = m;
-                kshayaGapDay = endInt - 1;  // calendar day that owns the gap Amavasya
-                break;
+        if (transitions === 0) {
+            kshayaIndex = m;
+            // Set kshayaGapDay to suppress the edge-case-C promotion in
+            // findCurrentMonth.  That promotion was designed for a code path where
+            // the kshaya month's only Amavasya is "claimed" from the preceding
+            // month; setting kshayaGapDay >= 0 tells findCurrentMonth that the
+            // Amavasya is already accounted for and no promotion is needed.
+            //
+            // First, scan within the kshaya month itself for an Amavasya at sunrise.
+            for (let d = startInt; d < endInt; d++) {
+                const ds = computePanchanga(d + kshayaSunriseUT, makeDateInfoForDay(d + kshayaSunriseUT, dateInfoTemplate));
+                if (ds.thithiIndex === 29) {
+                    kshayaGapDay = d;
+                    break;
+                }
             }
+            // If none found, scan for a between-sunrise gap (tithi 28 → 0).
+            if (kshayaGapDay < 0) {
+                for (let d = startInt; d < endInt; d++) {
+                    const thisSr = computePanchanga(d + kshayaSunriseUT, makeDateInfoForDay(d + kshayaSunriseUT, dateInfoTemplate));
+                    const nextSr = computePanchanga(d + 1 + kshayaSunriseUT, makeDateInfoForDay(d + 1 + kshayaSunriseUT, dateInfoTemplate));
+                    if (thisSr.thithiIndex === 28 && nextSr.thithiIndex === 0) {
+                        kshayaGapDay = d;
+                        break;
+                    }
+                }
+            }
+            // If the kshaya month has no Amavasya of its own (kshayaGapDay still -1),
+            // look for an Amavasya in the preceding month and use that day.
+            // This prevents the promotion from incorrectly renaming the preceding
+            // month's real festival (e.g. Bheemana Amavasya) to the kshaya month.
+            if (kshayaGapDay < 0 && m > 1) {
+                const prevStart = Math.floor(monthStarts[m - 2]);
+                const prevEnd   = startInt;
+                for (let d = prevStart; d < prevEnd; d++) {
+                    const ds = computePanchanga(d + kshayaSunriseUT, makeDateInfoForDay(d + kshayaSunriseUT, dateInfoTemplate));
+                    if (ds.thithiIndex === 29) {
+                        kshayaGapDay = d;
+                        break;
+                    }
+                }
+            }
+            break;
         }
     }
 
