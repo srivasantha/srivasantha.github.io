@@ -2777,6 +2777,13 @@ function computeFullPanchanga(params) {
     // two consecutive sunrise days for this tithi → suppress today, fire tomorrow.
     const isTithiDupFirst = (nextSunriseStateb.thithiIndex === sunriseState.thithiIndex);
 
+    // Number of tithi steps from today's sunrise to tomorrow's (mod 30).
+    // When this is ≥ 2, at least one tithi was skipped — it started and ended
+    // entirely between the two sunrises and needs a probe to detect.
+    const nextTithiIdx  = nextSunriseStateb.thithiIndex;
+    const todayTithiIdx = sunriseState.thithiIndex;
+    const tithiStep     = (nextTithiIdx - todayTithiIdx + 30) % 30;
+
     // For vaideeka festivals: always evaluate thithi at 3:30 PM IST (15:30 IST = 10:00 UT).
     // Rules:
     //   1. If the vaideeka thithi is present at 3:30 PM today → use today
@@ -2801,7 +2808,12 @@ function computeFullPanchanga(params) {
     const tblAtPm330Today    = lookupFestival(festMonth, pm330StateToday.thithiIndex);
     const tblAtPm330Tomorrow = lookupFestival(festMonth, pm330StateTomorrow.thithiIndex);
 
-    let tblFestival;
+    // Collect all non-vaideeka tbl festivals that fire today into an array.
+    // Multiple festivals can occur on the same day when, e.g., one tithi is
+    // entirely between two sunrises (kshaya tithi) while a different tithi is
+    // present at sunrise — both belong to today's calendar date.
+    const tblFestivals = [];
+    let tblFestival;   // single vaideeka result (at most one)
     if (isVaideeka(tblAtPm330Today) && !isVaideeka(tblAtPm330Tomorrow)) {
         // Vaideeka thithi is present at 3:30 PM today but not tomorrow → fire today.
         tblFestival = tblAtPm330Today;
@@ -2814,21 +2826,43 @@ function computeFullPanchanga(params) {
         // Vaideeka thithi starts after 3:30 PM today (no non-vaideeka at sunrise) →
         // fire tomorrow (suppress today).
         tblFestival = null;
-    } else if (tblAtSunrise && !isVaideeka(tblAtSunrise)) {
-        // Non-vaideeka: tithi is present at today's sunrise.
-        // If tomorrow's sunrise also has it, suppress today (second day is preferred).
-        tblFestival = isTithiDupFirst ? null : tblAtSunrise;
-    } else if (tblAtQuery && !isVaideeka(tblAtQuery)) {
-        // Non-vaideeka: tithi is not present at today's sunrise but is present at
-        // query time → it started after sunrise today.
-        // If it also reaches tomorrow's sunrise it spans the boundary; the
-        // sunrise-based rule will fire it tomorrow → suppress today.
-        // If it ends before tomorrow's sunrise it is entirely between the two
-        // sunrises (kshaya tithi): fire on the day it starts (today).
-        const nextTbl = lookupFestival(festMonth, nextSunriseStateb.thithiIndex);
-        tblFestival = (nextTbl === tblAtQuery) ? null : tblAtQuery;
     } else {
         tblFestival = null;
+
+        if (tblAtSunrise && !isVaideeka(tblAtSunrise)) {
+            // Non-vaideeka: tithi is present at today's sunrise.
+            // If tomorrow's sunrise also has it, suppress today (second day is preferred).
+            if (!isTithiDupFirst) tblFestivals.push(tblAtSunrise);
+        }
+
+        // Also check for a festival whose tithi falls entirely between today's
+        // sunrise and tomorrow's sunrise (a different tithi from the one at
+        // sunrise).  This allows two festivals to coincide on the same date.
+        //
+        // Strategy: if tomorrow's sunrise tithi is TWO (or more) steps ahead of
+        // today's, then at least one tithi was entirely skipped — it started and
+        // ended between the two sunrises.  Probe at midpoint and ¾-point between
+        // the two sunrises to find which tithi was active in that window.
+        if (tithiStep >= 2) {
+            // At least one tithi fits entirely between the two sunrises.
+            // Probe at midpoint and ¾-point to find it.
+            for (const frac of [0.5, 0.75]) {
+                const probeJ   = sunriseJ2000 + frac * (nextSunriseJ2000b - sunriseJ2000);
+                const probeInfo = Object.assign({}, dateInfo, {
+                    j2000Day: probeJ,
+                    utHours:  (probeJ - Math.floor(probeJ)) * 24.0
+                });
+                const probeState = computePanchanga(probeJ, probeInfo);
+                const tblAtProbe = lookupFestival(festMonth, probeState.thithiIndex);
+                if (tblAtProbe && !isVaideeka(tblAtProbe)
+                        && tblAtProbe !== tblAtSunrise
+                        && !tblFestivals.includes(tblAtProbe)) {
+                    // Confirm it doesn't reach tomorrow's sunrise.
+                    const nextTbl = lookupFestival(festMonth, nextTithiIdx);
+                    if (nextTbl !== tblAtProbe) tblFestivals.push(tblAtProbe);
+                }
+            }
+        }
     }
 
     const specAtSunrise = detectSpecialFestival(sunriseState, festMonth);
@@ -2837,7 +2871,8 @@ function computeFullPanchanga(params) {
     const specAtPm330Today    = detectSpecialFestival(pm330StateToday,    festMonth);
     const specAtPm330Tomorrow = detectSpecialFestival(pm330StateTomorrow, festMonth);
 
-    let specFestival;
+    const specFestivals = [];
+    let specFestival;   // single vaideeka result (at most one)
     if (isVaideeka(specAtPm330Today) && !isVaideeka(specAtPm330Tomorrow)) {
         // Vaideeka special festival present at 3:30 PM today but not tomorrow → fire today.
         specFestival = specAtPm330Today;
@@ -2850,18 +2885,48 @@ function computeFullPanchanga(params) {
         // Vaideeka special festival starts after 3:30 PM today (no non-vaideeka at sunrise) →
         // suppress today, fire tomorrow.
         specFestival = null;
-    } else if (specAtSunrise && !isVaideeka(specAtSunrise)) {
-        // Non-vaideeka: tithi at sunrise. Suppress if tomorrow also has it.
-        specFestival = isTithiDupFirst ? null : specAtSunrise;
-    } else if (specAtQuery && !isVaideeka(specAtQuery)) {
-        // Non-vaideeka: tithi starts after sunrise today.
-        const nextSpec = detectSpecialFestival(nextSunriseStateb, festMonth);
-        specFestival = (nextSpec === specAtQuery) ? null : specAtQuery;
     } else {
         specFestival = null;
+
+        if (specAtSunrise && !isVaideeka(specAtSunrise)) {
+            // Non-vaideeka: tithi at sunrise.
+            // If tomorrow's sunrise also has it, suppress today (second day is preferred).
+            if (!isTithiDupFirst) specFestivals.push(specAtSunrise);
+        }
+
+        // Probe for a special festival in the between-sunrise window (same
+        // tithiStep logic as tbl above).
+        if (tithiStep >= 2) {
+            for (const frac of [0.5, 0.75]) {
+                const probeJ    = sunriseJ2000 + frac * (nextSunriseJ2000b - sunriseJ2000);
+                const probeInfo = Object.assign({}, dateInfo, {
+                    j2000Day: probeJ,
+                    utHours:  (probeJ - Math.floor(probeJ)) * 24.0
+                });
+                const probeState  = computePanchanga(probeJ, probeInfo);
+                const specAtProbe = detectSpecialFestival(probeState, festMonth);
+                if (specAtProbe && !isVaideeka(specAtProbe)
+                        && specAtProbe !== specAtSunrise
+                        && !specFestivals.includes(specAtProbe)) {
+                    const nextSpec = detectSpecialFestival(nextSunriseStateb, festMonth);
+                    if (nextSpec !== specAtProbe) specFestivals.push(specAtProbe);
+                }
+            }
+        }
     }
 
-    let festivalRaw   = tblFestival || specFestival || null;
+    // Merge all festival names from both tbl and spec sources.
+    // tblFestival / specFestival carry vaideeka results (single string or null).
+    // tblFestivals / specFestivals carry non-vaideeka results (arrays).
+    const allFestivals = [];
+    if (tblFestival) allFestivals.push(tblFestival);
+    for (const f of tblFestivals) allFestivals.push(f);
+    if (specFestival) allFestivals.push(specFestival);
+    for (const f of specFestivals) allFestivals.push(f);
+
+    // De-duplicate (same name can't appear twice).
+    const festivalRawArr = [...new Set(allFestivals)];
+    let festivalRaw = festivalRawArr.length > 0 ? festivalRawArr : null;
 
     // -----------------------------------------------------------------------
     // Vaikunta Ekadashi (code 31) deduplication guards.
@@ -2883,14 +2948,15 @@ function computeFullPanchanga(params) {
     //   Dhanus, suppress this date if December of the same Gregorian year
     //   also produces a Vaikunta Ekadashi — the December date is preferred.
     // -----------------------------------------------------------------------
-    if (festivalRaw === FESTIVAL_NAMES[31]) {
+    if (festivalRaw && festivalRaw.includes(FESTIVAL_NAMES[31])) {
         const sunSidForVE = mod360(sunriseState.sunSiderealLon - sunriseState.ayanamsha);
         const inDhanusVE  = sunSidForVE >= 240.0 && sunSidForVE < 270.0;
 
+        let suppressVE = false;
         if (festMonth === 8) {
             // Guard A: Margashira Ekadashi — require Dhanurmasa sun position.
             if (!inDhanusVE) {
-                festivalRaw = null;
+                suppressVE = true;
             } else {
                 // Also suppress if a Pushya Shukla Ekadashi fires within 29 days.
                 let hasUpcomingPushyaEK = false;
@@ -2910,7 +2976,7 @@ function computeFullPanchanga(params) {
                         }
                     }
                 }
-                if (hasUpcomingPushyaEK) festivalRaw = null;
+                if (hasUpcomingPushyaEK) suppressVE = true;
             }
         } else if (festMonth === 9 && month === 1 && inDhanusVE) {
             // Guard B: Pushya Ekadashi in January while still in Dhanurmasa.
@@ -2932,11 +2998,25 @@ function computeFullPanchanga(params) {
                     }
                 }
             }
-            if (hasDecVaikunta) festivalRaw = null;
+            if (hasDecVaikunta) suppressVE = true;
+        }
+
+        if (suppressVE) {
+            const filtered = festivalRaw.filter(f => f !== FESTIVAL_NAMES[31]);
+            festivalRaw = filtered.length > 0 ? filtered : null;
         }
     }
 
-    const festival      = (isAdhika && !isVaideeka(festivalRaw)) ? null : festivalRaw;
+    // In an adhika (intercalary) month suppress non-vaideeka festivals.
+    // festivalRaw is now an array (or null); filter out non-vaideeka entries
+    // when isAdhika is true.
+    let festival = null;
+    if (festivalRaw) {
+        const kept = isAdhika
+            ? festivalRaw.filter(f => isVaideeka(f))
+            : festivalRaw;
+        festival = kept.length > 0 ? kept : null;
+    }
 
     // Rashi for Moon
     const rashiName = RASHI_FULL_NAMES[state.rashiIndex];
@@ -3365,9 +3445,9 @@ function displayResult(r, meta) {
   buildNatalCharts(r);
 
   // Festival callout
-  if (r.festival) {
+  if (r.festival && r.festival.length > 0) {
     document.getElementById('festCallout').style.display = 'flex';
-    document.getElementById('festName').textContent = r.festival;
+    document.getElementById('festName').textContent = r.festival.join(' | ');
   } else {
     document.getElementById('festCallout').style.display = 'none';
   }
