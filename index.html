@@ -2619,6 +2619,7 @@ const FESTIVAL_MAP = {
     250: 37,  // SarojammaVaidika
     251: 31,  // Vaikunta Ekadashi (Margashira Shukla Ekadashi — Dhanurmasa case)
     281: 31,  // Vaikunta Ekadashi (Pushya Shukla Ekadashi — usual case)
+    311: 31,  // Vaikunta Ekadashi (Magha Shukla Ekadashi — rare Makara Sankranthi overlap)
     307: 32,  // Ratha Sapthami
     329: 33,  // Maha Shivaraathri
     330: 34,  // Arakalagudu1
@@ -2638,8 +2639,8 @@ function lookupFestival(festMonth, festThithi) {
  * @returns {string|null}
  */
 function detectSpecialFestival(state, festMonth) {
-    // Varamahalakshmi: Friday (vara 5) in Shravana month (festmonth 4), tithi 8-14
-    if (state.thithiIndex > 7 && state.thithiIndex < 15
+    // Varamahalakshmi: Friday (vara 5) in Shravana month (festmonth 4), tithi 7-14
+    if (state.thithiIndex >= 7 && state.thithiIndex < 15
         && state.varaIndex === 5 && festMonth === 4) {
         return 'Varamahalakshmi shukravara';
     }
@@ -2786,8 +2787,9 @@ function computeFullPanchanga(params) {
     // compute tomorrow's approximate sunrise tithi (sunriseJ2000 + 1 day).
     const nextSunriseJ2000b = sunriseJ2000 + 1.0;
     const nextSunriseInfob  = Object.assign({}, dateInfo, {
-        j2000Day: nextSunriseJ2000b,
-        utHours:  (nextSunriseJ2000b - Math.floor(nextSunriseJ2000b)) * 24.0
+        j2000Day:     nextSunriseJ2000b,
+        j2000DaysInt: Math.floor(nextSunriseJ2000b),
+        utHours:      (nextSunriseJ2000b - Math.floor(nextSunriseJ2000b)) * 24.0
     });
     const nextSunriseStateb = computePanchanga(nextSunriseJ2000b, nextSunriseInfob);
     // True when tomorrow's sunrise has the same tithi → today is the first of
@@ -2826,16 +2828,18 @@ function computeFullPanchanga(params) {
     const pm330J2000Tomorrow = dateInfo.j2000DaysInt + 1.0 + kPm330UT / 24.0;
 
     const pm330InfoYesterday = Object.assign({}, dateInfo, {
-        j2000Day: pm330J2000Yesterday,
-        utHours:  kPm330UT
+        j2000Day:     pm330J2000Yesterday,
+        j2000DaysInt: dateInfo.j2000DaysInt - 1,
+        utHours:      kPm330UT
     });
     const pm330InfoToday = Object.assign({}, dateInfo, {
         j2000Day: pm330J2000Today,
         utHours:  kPm330UT
     });
     const pm330InfoTomorrow = Object.assign({}, dateInfo, {
-        j2000Day: pm330J2000Tomorrow,
-        utHours:  kPm330UT
+        j2000Day:     pm330J2000Tomorrow,
+        j2000DaysInt: dateInfo.j2000DaysInt + 1,
+        utHours:      kPm330UT
     });
     const pm330StateYesterday = computePanchanga(pm330J2000Yesterday, pm330InfoYesterday);
     const pm330StateToday    = computePanchanga(pm330J2000Today,    pm330InfoToday);
@@ -2886,7 +2890,10 @@ function computeFullPanchanga(params) {
             // ensuring findCurrentMonth returns the right lunar month for that date.
             // Guard: the lookahead must stay within the current year's monthStarts[12]
             // boundary to avoid false positives when the year rolls over.
+            // Exception: Vaikunta Ekadashi (code 31) has its own dedicated guard block
+            // that handles all deduplication scenarios; skip isMonthDupFirst for it.
             let isMonthDupFirst = false;
+            if (tblAtSunrise !== FESTIVAL_NAMES[31]) {
             const yearEndBoundary = yearStartResult.monthStarts[12] ?? Infinity;
             const nextCycleJ2000 = sunriseJ2000 + 29.0;
             if (nextCycleJ2000 < yearEndBoundary) {
@@ -2919,6 +2926,7 @@ function computeFullPanchanga(params) {
                     }
                 }
             }
+            } // end if (tblAtSunrise !== 31)
 
             if (!isTithiDupFirst && !isMonthDupFirst) tblFestivals.push(tblAtSunrise);
         }
@@ -2996,9 +3004,37 @@ function computeFullPanchanga(params) {
             // but is present at 3:30 PM today.  Fire today if:
             //   - it wasn't already present at yesterday's 3:30 PM (already fired), and
             //   - tomorrow's sunrise won't also have it (prefer the later day), and
-            //   - it doesn't persist to tomorrow's 3:30 PM (fire tomorrow instead).
+            //   - it doesn't persist to tomorrow's 3:30 PM (fire tomorrow instead), and
+            //   - the same weekday-based festival doesn't fire again 7 days later
+            //     at sunrise (prefer the later occurrence, as in the specAtSunrise branch).
             const specAtNextSunrise = detectSpecialFestival(nextSunriseStateb, nextFestMonth);
-            if (specAtNextSunrise !== specAtPm330Today
+            let isWeekdayDupFirstPm = false;
+            const nextWeekSrJ2000pm = sunriseJ2000 + 7.0;
+            const nextWeekSrInfopm  = Object.assign({}, dateInfo, {
+                j2000Day:     nextWeekSrJ2000pm,
+                j2000DaysInt: Math.floor(nextWeekSrJ2000pm),
+                utHours:      (nextWeekSrJ2000pm - Math.floor(nextWeekSrJ2000pm)) * 24.0
+            });
+            const nextWeekSrStatepm = computePanchanga(nextWeekSrJ2000pm, nextWeekSrInfopm);
+            const { monthIndex: nwMonthIdxPm } = findCurrentMonth(
+                nextWeekSrJ2000pm,
+                yearStartResult.monthStarts, yearStartResult.hasAdhika,
+                yearStartResult.adhikaStart, nextWeekSrStatepm.thithiIndex,
+                yearStartResult.kshayaIndex, yearStartResult.kshayaGapDay
+            );
+            const specAtNextWeekPm = detectSpecialFestival(nextWeekSrStatepm, nwMonthIdxPm - 1);
+            if (specAtNextWeekPm === specAtPm330Today) isWeekdayDupFirstPm = true;
+            // For nakshatra-based festivals (e.g. Rugveda Upakarma): also suppress
+            // if the next sunrise independently satisfies the same nakshatra condition,
+            // even when detectSpecialFestival returns a different festival there (because
+            // another condition — e.g. Varamahalakshmi — is checked first in the chain).
+            // Specifically: if specAtPm330Today is Rugveda Upakarma and tomorrow's sunrise
+            // has Shravana nakshatra in Shravana month, suppress today.
+            const rugvedaName = 'Rugveda Upakarma';
+            const nextSrAlsoHasRugveda = (specAtPm330Today === rugvedaName)
+                && (nextSunriseStateb.nakIndex === 22 && nextFestMonth === 4);
+            if (!isWeekdayDupFirstPm && !nextSrAlsoHasRugveda
+                    && specAtNextSunrise !== specAtPm330Today
                     && specAtPm330Today !== specAtPm330Tomorrow) {
                 specFestivals.push(specAtPm330Today);
             }
@@ -3030,7 +3066,15 @@ function computeFullPanchanga(params) {
             const specAtNextWeek = detectSpecialFestival(nextWeekSunriseState, nextWeekFestMonth);
             if (specAtNextWeek === specAtSunrise) isWeekdayDupFirst = true;
 
-            if (!isTithiDupFirst && !isWeekdayDupFirst) specFestivals.push(specAtSunrise);
+            // For weekday-based special festivals (e.g. Varamahalakshmi on Friday),
+            // isTithiDupFirst is a false positive when tomorrow is a different weekday:
+            // the tithi spans two sunrises but the festival condition (Friday) does not.
+            // Override: treat today's tithi-dup suppression as irrelevant if tomorrow's
+            // sunrise would not also fire this same special festival.
+            const specAtTomorrow = detectSpecialFestival(nextSunriseStateb, nextFestMonth);
+            const effectiveTithiDupFirst = isTithiDupFirst && (specAtTomorrow === specAtSunrise);
+
+            if (!effectiveTithiDupFirst && !isWeekdayDupFirst) specFestivals.push(specAtSunrise);
         }
 
         // Probe for a special festival in the between-sunrise window (same
@@ -3055,6 +3099,26 @@ function computeFullPanchanga(params) {
         }
     }
 
+    // -----------------------------------------------------------------------
+    // Supplementary: Rugveda Upakarma can coincide with Varamahalakshmi on the
+    // same Friday in Shravana when the nakshatra happens to be Shravana.
+    // detectSpecialFestival returns only one festival at a time; if Varamahalakshmi
+    // was returned, Rugveda Upakarma would be silently dropped.  Check explicitly
+    // here: if today (at sunrise) has Shravana nakshatra in Shravana month and
+    // Rugveda Upakarma is not already in specFestivals, fire it today.
+    // Apply the same isTithiDupFirst-override logic as for Varamahalakshmi.
+    const rugvedaName = 'Rugveda Upakarma';
+    if (sunriseState.nakIndex === 22 && festMonth === 4
+            && !specFestivals.includes(rugvedaName)
+            && specAtSunrise !== rugvedaName) {
+        const nextRugveda = (nextSunriseStateb.nakIndex === 22 && nextFestMonth === 4);
+        const rugvedaTomorrow = nextRugveda ? rugvedaName : null;
+        const rugvedaEffectiveTithiDup = isTithiDupFirst && (rugvedaTomorrow === rugvedaName);
+        if (!rugvedaEffectiveTithiDup) {
+            specFestivals.push(rugvedaName);
+        }
+    }
+
     // Merge all festival names from both tbl and spec sources.
     // tblFestival / specFestival carry vaideeka results (single string or null).
     // tblFestivals / specFestivals carry non-vaideeka results (arrays).
@@ -3071,9 +3135,12 @@ function computeFullPanchanga(params) {
     // -----------------------------------------------------------------------
     // Vaikunta Ekadashi (code 31) deduplication guards.
     //
-    // The festival can fire from two different map entries:
+    // The festival can fire from three map entries:
     //   key 251 — festMonth 8 (Margashira) Shukla Ekadashi  (Dhanurmasa case)
     //   key 281 — festMonth 9 (Pushya)     Shukla Ekadashi  (usual case)
+    //   key 311 — festMonth 10 (Magha)     Shukla Ekadashi  (rare overlap:
+    //             Makara Sankranthi and Ekadashi start on the same day, so the
+    //             Ekadashi began during Dhanurmasa but sunrise falls in Makara)
     //
     // Guard A (key 251 — Margashira):
     //   Only fire when the sun is sidereal in Dhanus (240°–270°), i.e. truly
@@ -3081,12 +3148,19 @@ function computeFullPanchanga(params) {
     //   fire within the next 29 days — that means the upcoming Pushya month
     //   has its own Ekadashi, which is the preferred date.
     //
-    // Guard B (key 281 — Pushya, January only):
+    // Guard B (key 281 or 251 — January case):
     //   A rare calendar anomaly can place two separate Dhanurmasa Ekadashis
     //   in the same Gregorian year (one in January, one in December).
     //   When the current date is in January AND the sun sidereal is still in
-    //   Dhanus, suppress this date if December of the same Gregorian year
-    //   also produces a Vaikunta Ekadashi — the December date is preferred.
+    //   Dhanus (or was in Dhanus yesterday for festMonth 9), suppress this
+    //   date if December of the same Gregorian year also produces a Vaikunta
+    //   Ekadashi in Margashira or Pushya with sun in Dhanus.
+    //   The December date is preferred.
+    //
+    // Guard C (key 311 — Magha):
+    //   Only fire when yesterday's sun was in Dhanus (i.e. Makara Sankranthi
+    //   occurred on the same day the Ekadashi began — an extremely rare case).
+    //   Also suppress if there is a Vaikunta in December of the same year.
     // -----------------------------------------------------------------------
     if (festivalRaw && festivalRaw.includes(FESTIVAL_NAMES[31])) {
         const sunSidForVE = mod360(sunriseState.sunSiderealLon - sunriseState.ayanamsha);
@@ -3098,22 +3172,34 @@ function computeFullPanchanga(params) {
             if (!inDhanusVE) {
                 suppressVE = true;
             } else {
-                // Also suppress if a Pushya Shukla Ekadashi fires within 29 days.
+                // Also suppress if a Pushya Shukla Ekadashi fires within 29 days,
+                // but only if that Ekadashi falls in the same Gregorian year.
+                // (When the Margashira EK is in December, any Pushya EK within
+                // 29 days falls in January of the next year and should not cause
+                // suppression — the December date is the canonical VE for this year.)
                 let hasUpcomingPushyaEK = false;
+                const endOfYearJ = dateInfo.j2000DaysInt + (32 - day); // approx Dec 31
                 for (let offset = 1; offset <= 29 && !hasUpcomingPushyaEK; offset++) {
                     const futJ    = sunriseJ2000 + offset;
+                    // Skip if this future day is outside the current Gregorian year.
+                    if (month === 12 && futJ > endOfYearJ) break;
                     const futInfo = makeDateInfoForDay(futJ, dateInfo);
                     const futSt   = computePanchanga(futJ, futInfo);
                     if (futSt.thithiIndex === 10) {
-                        // Check if this future day's lunar month is Pushya (festMonth 9).
-                        const futYS = findYearStart(futJ, futInfo);
-                        const futM  = findCurrentMonth(
-                            futJ, futYS.monthStarts, futYS.hasAdhika,
-                            futYS.adhikaStart, futSt.thithiIndex, futYS.kshayaIndex,
-                            futYS.kshayaGapDay
-                        );
-                        if ((futM.monthIndex - 1) === 9 && !futM.isAdhika) {
-                            hasUpcomingPushyaEK = true;
+                        // Check if this future day's lunar month is Pushya (festMonth 9)
+                        // AND the sun is still in Dhanus (still Dhanurmasa).
+                        const futSunSid = mod360(futSt.sunSiderealLon - futSt.ayanamsha);
+                        const futInDhanus = futSunSid >= 240.0 && futSunSid < 270.0;
+                        if (futInDhanus) {
+                            const futYS = findYearStart(futJ, futInfo);
+                            const futM  = findCurrentMonth(
+                                futJ, futYS.monthStarts, futYS.hasAdhika,
+                                futYS.adhikaStart, futSt.thithiIndex, futYS.kshayaIndex,
+                                futYS.kshayaGapDay
+                            );
+                            if ((futM.monthIndex - 1) === 9 && !futM.isAdhika) {
+                                hasUpcomingPushyaEK = true;
+                            }
                         }
                     }
                 }
@@ -3121,26 +3207,71 @@ function computeFullPanchanga(params) {
             }
         } else if (festMonth === 9 && month === 1 && inDhanusVE) {
             // Guard B: Pushya Ekadashi in January while still in Dhanurmasa.
-            // Suppress if December of the same Gregorian year has a Vaikunta.
+            // Suppress if December of the same Gregorian year has any Vaikunta
+            // Ekadashi (Margashira or Pushya) with sun in Dhanus.
+            // Scan Dec 15-31 for Shukla Ekadashi in Margashira or Pushya with
+            // sun in Dhanus.
             let hasDecVaikunta = false;
-            for (let d2 = 21; d2 <= 31 && !hasDecVaikunta; d2++) {
+            for (let d2 = 15; d2 <= 31 && !hasDecVaikunta; d2++) {
                 const decJ    = buildDateInfo(d2, 12, year, 6, 0,
                                     longitude, latitude, tzHr, tzMin).j2000Day;
                 const decInfo = makeDateInfoForDay(decJ, dateInfo);
                 const decSt   = computePanchanga(decJ, decInfo);
                 if (decSt.thithiIndex === 10) {
+                    const decSunSid = mod360(decSt.sunSiderealLon - decSt.ayanamsha);
+                    const decInDhanus = decSunSid >= 240.0 && decSunSid < 270.0;
                     const decYS = findYearStart(decJ, decInfo);
                     const decM  = findCurrentMonth(
                         decJ, decYS.monthStarts, decYS.hasAdhika,
                         decYS.adhikaStart, decSt.thithiIndex, decYS.kshayaIndex,
                         decYS.kshayaGapDay
                     );
-                    if ((decM.monthIndex - 1) === 9 && !decM.isAdhika) {
+                    const decFestMonth = decM.monthIndex - 1;
+                    if (!decM.isAdhika && decInDhanus &&
+                        (decFestMonth === 8 || decFestMonth === 9)) {
                         hasDecVaikunta = true;
                     }
                 }
             }
             if (hasDecVaikunta) suppressVE = true;
+        } else if (festMonth === 10) {
+            // Guard C: Magha Ekadashi — extremely rare case where Makara
+            // Sankranthi and Ekadashi start coincide so the Ekadashi began
+            // during Dhanurmasa but sunrise is already in Makara.
+            // Only fire if yesterday's sun was in Dhanus.
+            const prevJ    = sunriseJ2000 - 1;
+            const prevInfo = makeDateInfoForDay(prevJ, dateInfo);
+            const prevSt   = computePanchanga(prevJ, prevInfo);
+            const prevSunSid = mod360(prevSt.sunSiderealLon - prevSt.ayanamsha);
+            const prevInDhanus = prevSunSid >= 240.0 && prevSunSid < 270.0;
+            if (!prevInDhanus) {
+                suppressVE = true;
+            } else {
+                // Also suppress if December of the same year has a Vaikunta Ekadashi.
+                let hasDecVaikunta = false;
+                for (let d2 = 15; d2 <= 31 && !hasDecVaikunta; d2++) {
+                    const decJ    = buildDateInfo(d2, 12, year, 6, 0,
+                                        longitude, latitude, tzHr, tzMin).j2000Day;
+                    const decInfo = makeDateInfoForDay(decJ, dateInfo);
+                    const decSt   = computePanchanga(decJ, decInfo);
+                    if (decSt.thithiIndex === 10) {
+                        const decSunSid = mod360(decSt.sunSiderealLon - decSt.ayanamsha);
+                        const decInDhanus = decSunSid >= 240.0 && decSunSid < 270.0;
+                        const decYS = findYearStart(decJ, decInfo);
+                        const decM  = findCurrentMonth(
+                            decJ, decYS.monthStarts, decYS.hasAdhika,
+                            decYS.adhikaStart, decSt.thithiIndex, decYS.kshayaIndex,
+                            decYS.kshayaGapDay
+                        );
+                        const decFestMonth = decM.monthIndex - 1;
+                        if (!decM.isAdhika && decInDhanus &&
+                            (decFestMonth === 8 || decFestMonth === 9)) {
+                            hasDecVaikunta = true;
+                        }
+                    }
+                }
+                if (hasDecVaikunta) suppressVE = true;
+            }
         }
 
         if (suppressVE) {
@@ -3149,15 +3280,13 @@ function computeFullPanchanga(params) {
         }
     }
 
-    // In an adhika (intercalary) month suppress non-vaideeka festivals.
-    // festivalRaw is now an array (or null); filter out non-vaideeka entries
-    // when isAdhika is true.
+    // In an adhika (intercalary) month suppress all tbl-derived festivals
+    // (both vaideeka and non-vaideeka).  Vaideeka observances like
+    // Nanjundayyanavara Vaideeka are keyed to a specific regular month and
+    // should not fire when the same tithiIndex falls in the adhika counterpart.
     let festival = null;
-    if (festivalRaw) {
-        const kept = isAdhika
-            ? festivalRaw.filter(f => isVaideeka(f))
-            : festivalRaw;
-        festival = kept.length > 0 ? kept : null;
+    if (festivalRaw && !isAdhika) {
+        festival = festivalRaw.length > 0 ? festivalRaw : null;
     }
 
     // Rashi for Moon
