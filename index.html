@@ -2312,6 +2312,7 @@ function findYearStart(j2000Day, dateInfoTemplate) {
     // at the last sunrise of the current month, which is normal.)
     const kshayaSunriseUT = 0.021;   // ~30 min UT ≈ 6:00 am IST
     let kshayaIndex = -1;
+    let kshayaGapDay = -1;  // j2000 integer day that owns the between-sunrise Amavasya
     for (let m = 1; m <= 11; m++) {
         const startInt = Math.floor(monthStarts[m - 1]);
         const endInt   = Math.floor(monthStarts[m]);
@@ -2323,27 +2324,32 @@ function findYearStart(j2000Day, dateInfoTemplate) {
         if (!foundInside) {
             // No sunrise Amavasya inside the month. Check if endInt has tithi 0:
             // if so, the Amavasya was invisible at sunrise and the month is kshaya.
+            // The Amavasya fell entirely between the last sunrise of this month
+            // (endInt - 1) and the first sunrise of the next (endInt); it will be
+            // detected by the between-sunrise probe on calendar day endInt - 1.
             const endDayState = computePanchanga(
                 endInt + kshayaSunriseUT,
                 makeDateInfoForDay(endInt + kshayaSunriseUT, dateInfoTemplate)
             );
             if (endDayState.thithiIndex === 0) {
                 kshayaIndex = m;
+                kshayaGapDay = endInt - 1;  // calendar day that owns the gap Amavasya
                 break;
             }
         }
     }
 
-    return { monthStarts, hasAdhika, adhikaIndex, adhikaStart, adhikaName, kshayaIndex };
+    return { monthStarts, hasAdhika, adhikaIndex, adhikaStart, adhikaName, kshayaIndex, kshayaGapDay };
 }
 
 /**
  * Determine current Vedic lunar month from precomputed month starts.
  * @param {number} sunriseTithiIndex  tithi index (0-29) at sunrise; pass -1 if unknown
  * @param {number} kshayaIndex        1-based index of the kshaya month (-1 if none)
+ * @param {number} kshayaGapDay       j2000 integer day that owns the between-sunrise Amavasya (-1 if none)
  * @returns {{monthIndex: number, isAdhika: boolean}}  monthIndex is 1-based
  */
-function findCurrentMonth(j2000Day, monthStarts, hasAdhika, adhikaStart, sunriseTithiIndex, kshayaIndex) {
+function findCurrentMonth(j2000Day, monthStarts, hasAdhika, adhikaStart, sunriseTithiIndex, kshayaIndex, kshayaGapDay) {
     let month = 12;   // default: Phalguna
 
     // Use floor(monthStarts) so the new month begins on the calendar day that
@@ -2403,8 +2409,15 @@ function findCurrentMonth(j2000Day, monthStarts, hasAdhika, adhikaStart, sunrise
     // observed as the kshaya month's Amavasya.
     // kshayaIndex (computed by findYearStart) is the 1-based index of the kshaya
     // month; if today is Amavasya in month kshayaIndex-1, promote to kshayaIndex.
+    //
+    // Exception: if the kshaya month itself has a between-sunrise Amavasya
+    // (kshayaGapDay >= 0), that real Amavasya will be detected by the
+    // between-sunrise probe on kshayaGapDay.  In that case suppress the
+    // promotion here so the preceding month's Amavasya does not fire a
+    // duplicate festival earlier in the year.
     if (sunriseTithiIndex === 29 && !isAdhika &&
-        kshayaIndex > 1 && month === kshayaIndex - 1) {
+        kshayaIndex > 1 && month === kshayaIndex - 1 &&
+        kshayaGapDay < 0) {
         month = kshayaIndex;
     }
 
@@ -2744,7 +2757,8 @@ function computeFullPanchanga(params) {
         yearStartResult.hasAdhika,
         yearStartResult.adhikaStart,
         sunriseState.thithiIndex,
-        yearStartResult.kshayaIndex
+        yearStartResult.kshayaIndex,
+        yearStartResult.kshayaGapDay
     );
 
     // Re-run at original time to get fest-time state
@@ -2969,7 +2983,8 @@ function computeFullPanchanga(params) {
                         const futYS = findYearStart(futJ, futInfo);
                         const futM  = findCurrentMonth(
                             futJ, futYS.monthStarts, futYS.hasAdhika,
-                            futYS.adhikaStart, futSt.thithiIndex, futYS.kshayaIndex
+                            futYS.adhikaStart, futSt.thithiIndex, futYS.kshayaIndex,
+                            futYS.kshayaGapDay
                         );
                         if ((futM.monthIndex - 1) === 9 && !futM.isAdhika) {
                             hasUpcomingPushyaEK = true;
@@ -2991,7 +3006,8 @@ function computeFullPanchanga(params) {
                     const decYS = findYearStart(decJ, decInfo);
                     const decM  = findCurrentMonth(
                         decJ, decYS.monthStarts, decYS.hasAdhika,
-                        decYS.adhikaStart, decSt.thithiIndex, decYS.kshayaIndex
+                        decYS.adhikaStart, decSt.thithiIndex, decYS.kshayaIndex,
+                        decYS.kshayaGapDay
                     );
                     if ((decM.monthIndex - 1) === 9 && !decM.isAdhika) {
                         hasDecVaikunta = true;
