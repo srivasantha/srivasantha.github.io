@@ -2878,8 +2878,49 @@ function computeFullPanchanga(params) {
 
         if (tblAtSunrise && !isVaideeka(tblAtSunrise)) {
             // Non-vaideeka: tithi is present at today's sunrise.
-            // If tomorrow's sunrise also has it, suppress today (second day is preferred).
-            if (!isTithiDupFirst) tblFestivals.push(tblAtSunrise);
+            // Suppress today if tomorrow's sunrise also has it (second day is preferred).
+            // Also suppress if the same festival fires ~29-31 days later in the SAME
+            // lunar month (double-cycle month scenario, e.g. 2030 where Magha spans
+            // two full new-moon cycles): prefer the later occurrence.
+            // Use findYearStart for the forward date to get its correct year context,
+            // ensuring findCurrentMonth returns the right lunar month for that date.
+            // Guard: the lookahead must stay within the current year's monthStarts[12]
+            // boundary to avoid false positives when the year rolls over.
+            let isMonthDupFirst = false;
+            const yearEndBoundary = yearStartResult.monthStarts[12] ?? Infinity;
+            const nextCycleJ2000 = sunriseJ2000 + 29.0;
+            if (nextCycleJ2000 < yearEndBoundary) {
+                const nextCycleYSR = findYearStart(nextCycleJ2000, dateInfo);
+                // Scan ±2 days around +29 to handle tithi timing uncertainty
+                for (let offset = 27; offset <= 32; offset++) {
+                    const tryJ2000 = sunriseJ2000 + offset;
+                    if (tryJ2000 >= yearEndBoundary) break;
+                    const tryInfo = Object.assign({}, dateInfo, {
+                        j2000Day: tryJ2000,
+                        utHours:  (tryJ2000 - Math.floor(tryJ2000)) * 24.0
+                    });
+                    const tryState = computePanchanga(tryJ2000, tryInfo);
+                    const { monthIndex: tryMonthIndex, isAdhika: tryIsAdhika } = findCurrentMonth(
+                        tryJ2000,
+                        nextCycleYSR.monthStarts,
+                        nextCycleYSR.hasAdhika,
+                        nextCycleYSR.adhikaStart,
+                        tryState.thithiIndex,
+                        nextCycleYSR.kshayaIndex,
+                        nextCycleYSR.kshayaGapDay
+                    );
+                    // Skip adhika months: non-vaideeka festivals don't fire there
+                    if (tryIsAdhika) continue;
+                    const tryFestMonth = tryMonthIndex - 1;
+                    const tblAtTry = lookupFestival(tryFestMonth, tryState.thithiIndex);
+                    if (tblAtTry === tblAtSunrise && tryFestMonth === festMonth) {
+                        isMonthDupFirst = true;
+                        break;
+                    }
+                }
+            }
+
+            if (!isTithiDupFirst && !isMonthDupFirst) tblFestivals.push(tblAtSunrise);
         }
 
         // Also check for a festival whose tithi falls entirely between today's
