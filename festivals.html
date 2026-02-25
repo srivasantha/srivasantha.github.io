@@ -1,0 +1,3695 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Srikanta's Festival Calendar</title>
+<style>
+  @font-face { font-family: 'EB Garamond'; src: local('Georgia'), local('Georgia-Regular'); font-style: normal; font-weight: 400; }
+  @font-face { font-family: 'EB Garamond'; src: local('Georgia-Bold'), local('Georgia'); font-style: normal; font-weight: 600; }
+  @font-face { font-family: 'EB Garamond'; src: local('Georgia-Italic'), local('Georgia'); font-style: italic; font-weight: 400; }
+  @font-face { font-family: 'Inter'; src: local('system-ui'), local('-apple-system'); font-weight: 300 600; }
+  @font-face { font-family: 'JetBrains Mono'; src: local('Menlo-Regular'), local('Menlo'), local('Courier New'); font-weight: 400 500; }
+</style>
+<style>
+/* =====================================================================
+   DESIGN TOKENS & RESET  —  "Midnight Observatory" theme
+   Dark navy canvas · pearl text · electric amber + ice-blue accents
+===================================================================== */
+:root {
+  --bg-base:        #0d1117;
+  --bg-surface:     #161b22;
+  --bg-card:        #161b22;
+  --bg-card-hover:  #1c2330;
+  --bg-code:        #0d1117;
+  --border:         #2d3748;
+  --border-accent:  #4a5568;
+
+  --text-primary:   #e8edf5;
+  --text-secondary: #b8c4d4;
+  --text-muted:     #6b7c93;
+
+  --gold:           #f0a500;
+  --gold-dim:       #c88000;
+  --saffron:        #ff6b00;
+  --saffron-dim:    #cc5500;
+
+  --teal:           #38bdf8;
+  --teal-dim:       #0ea5e9;
+  --rose:           #fb7185;
+  --green:          #4ade80;
+
+  --radius:         12px;
+  --radius-sm:      8px;
+}
+
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+html { scroll-behavior: smooth; }
+
+body {
+  font-family: 'Inter', sans-serif;
+  font-size: 17px;
+  line-height: 1.75;
+  background: var(--bg-base);
+  color: var(--text-primary);
+  min-height: 100vh;
+}
+
+/* =====================================================================
+   MAIN CONTENT
+===================================================================== */
+#main {
+  flex: 1;
+  min-width: 0;
+  padding: 44px 56px 80px;
+  max-width: 1100px;
+}
+
+/* =====================================================================
+   PAGE HERO / HEADER
+===================================================================== */
+.page-hero {
+  margin-bottom: 40px;
+  padding: 40px 44px;
+  background: linear-gradient(135deg, #1c2330 0%, #1a2040 60%, #1e2448 100%);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  position: relative;
+  overflow: hidden;
+}
+
+.page-hero::before {
+  content: '';
+  position: absolute;
+  top: -80px; right: -80px;
+  width: 280px; height: 280px;
+  background: radial-gradient(circle, rgba(240,165,0,0.08) 0%, transparent 70%);
+  pointer-events: none;
+}
+
+.page-hero::after {
+  content: '';
+  position: absolute;
+  bottom: -40px; left: -40px;
+  width: 180px; height: 180px;
+  background: radial-gradient(circle, rgba(255,107,0,0.08) 0%, transparent 70%);
+  pointer-events: none;
+}
+
+.hero-moon {
+  position: absolute;
+  top: 10px; right: 36px;
+  width: 100px; height: 100px;
+  pointer-events: none;
+}
+
+.hero-stars {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+}
+
+.hero-kicker {
+  font-size: 13px;
+  font-weight: 600;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+  color: var(--saffron);
+  margin-bottom: 14px;
+}
+
+.page-hero h2 {
+  font-family: 'EB Garamond', serif;
+  font-size: 46px;
+  font-weight: 600;
+  color: var(--text-primary);
+  line-height: 1.15;
+  margin-bottom: 14px;
+}
+
+.page-hero h2 span { color: var(--gold); }
+
+.page-hero .desc {
+  font-size: 17px;
+  color: var(--text-secondary);
+  max-width: 620px;
+  line-height: 1.7;
+}
+
+/* =====================================================================
+   INPUT FORM CARD
+===================================================================== */
+.input-card {
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  overflow: hidden;
+  margin-bottom: 32px;
+  transition: border-color 0.2s;
+  box-shadow: 0 1px 6px rgba(0,0,0,0.05);
+}
+.input-card:focus-within {
+  border-color: var(--border-accent);
+}
+
+.card-hdr {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  padding: 20px 28px;
+  border-bottom: 1px solid var(--border);
+  background: rgba(0,0,0,0.30);
+}
+
+.card-icon {
+  width: 42px; height: 42px;
+  border-radius: 9px;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 20px;
+  flex-shrink: 0;
+}
+.icon-gold   { background: rgba(240,165,0,0.15);  color: var(--gold); }
+.icon-saff   { background: rgba(255,107,0,0.15);  color: var(--saffron); }
+.icon-teal   { background: rgba(56,189,248,0.12);  color: var(--teal); }
+
+.card-hdr-text h3 {
+  font-family: 'EB Garamond', serif;
+  font-size: 22px;
+  font-weight: 600;
+  color: var(--text-primary);
+}
+.card-hdr-text p { font-size: 14px; color: var(--text-muted); margin-top: 2px; }
+
+.card-body { padding: 28px; }
+
+/* Form layout */
+.form-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 22px;
+}
+
+.form-group { display: flex; flex-direction: column; gap: 9px; }
+.form-group.full { grid-column: 1 / -1; }
+
+.form-group label {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--text-secondary);
+  letter-spacing: 0.4px;
+  text-transform: uppercase;
+}
+
+.form-group input,
+.form-group select {
+  background: var(--bg-code);
+  border: 1.5px solid var(--border);
+  border-radius: var(--radius-sm);
+  padding: 13px 16px;
+  font-family: 'Inter', sans-serif;
+  font-size: 16px;
+  color: var(--text-primary);
+  outline: none;
+  transition: border-color 0.18s, box-shadow 0.18s;
+  -webkit-appearance: none;
+  appearance: none;
+  width: 100%;
+}
+
+.form-group input:focus,
+.form-group select:focus {
+  border-color: var(--gold);
+  box-shadow: 0 0 0 3px rgba(240,165,0,0.25);
+}
+
+.form-group select {
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath d='M1 1l5 5 5-5' stroke='%236b7c93' stroke-width='1.5' fill='none' stroke-linecap='round'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 14px center;
+  padding-right: 36px;
+}
+
+.form-group select option { background: var(--bg-surface); color: var(--text-primary); }
+
+/* Toggle switch */
+.toggle-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 16px 18px;
+  background: var(--bg-code);
+  border: 1.5px solid var(--border);
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+  gap: 16px;
+}
+
+.toggle-row .tl { font-size: 16px; color: var(--text-primary); font-weight: 500; }
+.toggle-row .ts { font-size: 13px; color: var(--text-muted); display: block; margin-top: 2px; }
+
+.toggle-switch {
+  position: relative;
+  width: 54px;
+  height: 30px;
+  flex-shrink: 0;
+}
+
+.toggle-switch input { opacity: 0; width: 0; height: 0; }
+
+.slider {
+  position: absolute;
+  inset: 0;
+  background: #2d3748;
+  border-radius: 30px;
+  transition: 0.2s;
+  cursor: pointer;
+}
+
+.slider::before {
+  content: '';
+  position: absolute;
+  height: 22px; width: 22px;
+  left: 4px; bottom: 4px;
+  background: #ffffff;
+  border-radius: 50%;
+  transition: 0.2s;
+  box-shadow: 0 1px 4px rgba(0,0,0,0.25);
+}
+
+.toggle-switch input:checked + .slider {
+  background: rgba(240,165,0,0.20);
+  border: 1.5px solid var(--gold);
+}
+.toggle-switch input:checked + .slider::before {
+  transform: translateX(24px);
+  background: var(--gold);
+}
+
+/* Coordinates sub-grid */
+.coord-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+}
+
+/* Location row: preset + coordinates side by side */
+.location-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 22px;
+  align-items: start;
+}
+@media (max-width: 640px) {
+  .location-row { grid-template-columns: 1fr; }
+}
+
+/* Submit button */
+.btn-calc {
+  width: 100%;
+  margin-top: 24px;
+  padding: 16px 28px;
+  background: linear-gradient(135deg, var(--gold), #0d1117);
+  border: none;
+  border-radius: var(--radius-sm);
+  color: #ffffff;
+  font-family: 'Inter', sans-serif;
+  font-size: 17px;
+  font-weight: 600;
+  letter-spacing: 0.3px;
+  cursor: pointer;
+  transition: opacity 0.18s, transform 0.1s;
+}
+.btn-calc:hover  { opacity: 0.9; }
+.btn-calc:active { transform: scale(0.99); }
+.btn-calc:disabled { opacity: 0.5; cursor: not-allowed; }
+
+/* =====================================================================
+   OUTPUT SECTION
+===================================================================== */
+#output { display: none; }
+#output.visible { display: block; }
+
+.output-header {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  margin-bottom: 28px;
+}
+
+.output-header h2 {
+  font-family: 'EB Garamond', serif;
+  font-size: 32px;
+  color: var(--text-primary);
+}
+
+.output-date-badge {
+  margin-left: auto;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 15px;
+  padding: 7px 16px;
+  background: var(--bg-code);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  color: var(--text-secondary);
+}
+
+/* Loading spinner */
+.spinner-wrap {
+  display: none;
+  text-align: center;
+  padding: 48px;
+  color: var(--text-muted);
+  font-size: 16px;
+}
+.spinner-wrap.visible { display: block; }
+
+.spinner {
+  display: inline-block;
+  width: 32px; height: 32px;
+  border: 2px solid var(--border);
+  border-top-color: var(--gold);
+  border-radius: 50%;
+  animation: spin 0.8s linear infinite;
+  margin-bottom: 12px;
+}
+
+@keyframes spin { to { transform: rotate(360deg); } }
+
+/* =====================================================================
+   MINI-CARDS for Tithi & Nakshatra
+===================================================================== */
+.mini-cards-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16px;
+  margin-bottom: 20px;
+}
+
+.mini-card {
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 24px 26px;
+  transition: border-color 0.2s;
+  box-shadow: 0 1px 6px rgba(0,0,0,0.05);
+}
+.mini-card:hover { border-color: var(--border-accent); }
+
+.mini-card .mc-label {
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+  color: var(--text-muted);
+  margin-bottom: 10px;
+}
+
+.mini-card .mc-value {
+  font-family: 'EB Garamond', serif;
+  font-size: 34px;
+  font-weight: 600;
+  color: var(--text-primary);
+  line-height: 1.2;
+  margin-bottom: 12px;
+}
+
+.mini-card .mc-sub {
+  font-size: 14px;
+  color: var(--text-muted);
+  margin-bottom: 14px;
+}
+
+/* Progress bar */
+.progress-bar-wrap {
+  background: #2d3748;
+  border-radius: 20px;
+  height: 10px;
+  overflow: hidden;
+  border: 1px solid var(--border);
+}
+
+.progress-bar {
+  height: 100%;
+  border-radius: 20px;
+  transition: width 0.6s ease;
+}
+.progress-bar.gold    { background: linear-gradient(90deg, var(--gold-dim), var(--gold)); }
+.progress-bar.saffron { background: linear-gradient(90deg, var(--saffron-dim), var(--saffron)); }
+.progress-bar.teal    { background: linear-gradient(90deg, var(--teal-dim), var(--teal)); }
+
+.progress-label {
+  display: flex;
+  justify-content: space-between;
+  font-size: 12px;
+  color: var(--text-muted);
+  margin-top: 6px;
+  font-weight: 500;
+}
+
+/* =====================================================================
+   SECTION CARDS
+===================================================================== */
+.section-card {
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  overflow: hidden;
+  margin-bottom: 20px;
+  transition: border-color 0.2s, box-shadow 0.2s;
+  box-shadow: 0 1px 6px rgba(0,0,0,0.05);
+}
+.section-card:hover { border-color: var(--border-accent); box-shadow: 0 2px 12px rgba(0,0,0,0.40); }
+
+.sc-header {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  padding: 18px 26px;
+  border-bottom: 1px solid var(--border);
+  background: rgba(0,0,0,0.30);
+}
+
+.sc-header h3 {
+  font-family: 'EB Garamond', serif;
+  font-size: 22px;
+  font-weight: 600;
+  color: var(--text-primary);
+}
+
+.sc-body { padding: 22px 26px; }
+
+/* =====================================================================
+   FIVE LIMBS GRID
+===================================================================== */
+.limbs-grid {
+  display: grid;
+  grid-template-columns: repeat(5, 1fr);
+  gap: 12px;
+}
+
+.limb-cell {
+  background: var(--bg-code);
+  border: 1.5px solid var(--border);
+  border-radius: var(--radius-sm);
+  padding: 18px 14px;
+  text-align: center;
+}
+
+.limb-cell .limb-name {
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+  color: var(--text-muted);
+  margin-bottom: 10px;
+}
+
+.limb-cell .limb-icon {
+  font-size: 26px;
+  margin-bottom: 8px;
+  display: block;
+}
+
+.limb-cell .limb-val {
+  font-family: 'Inter', sans-serif;
+  font-size: 17px;
+  color: var(--text-primary);
+  line-height: 1.3;
+  font-weight: 600;
+}
+
+/* =====================================================================
+   INFO TABLE
+===================================================================== */
+.info-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 16px;
+}
+
+.info-table th {
+  text-align: left;
+  padding: 12px 16px;
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+  color: var(--text-muted);
+  background: rgba(0,0,0,0.25);
+  border-bottom: 1.5px solid var(--border);
+}
+
+.info-table td {
+  padding: 13px 16px;
+  border-bottom: 1px solid rgba(45,55,72,0.90);
+  color: var(--text-secondary);
+  vertical-align: middle;
+}
+
+.info-table td:first-child {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 14px;
+  color: var(--teal);
+  white-space: nowrap;
+  min-width: 110px;
+  font-weight: 500;
+}
+
+.info-table tr:last-child td { border-bottom: none; }
+.info-table tr:hover td     { background: rgba(255,255,255,0.04); }
+
+/* =====================================================================
+   GRAHA POSITIONS TABLE (scrollable)
+===================================================================== */
+.graha-scroll {
+  overflow-x: auto;
+}
+
+.graha-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 15px;
+  min-width: 640px;
+}
+
+.graha-table th {
+  text-align: center;
+  padding: 12px 12px;
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 0.8px;
+  text-transform: uppercase;
+  color: var(--text-muted);
+  background: rgba(0,0,0,0.25);
+  border-bottom: 1.5px solid var(--border);
+}
+
+.graha-table th:first-child { text-align: left; }
+
+.graha-table td {
+  text-align: center;
+  padding: 12px 12px;
+  border-bottom: 1px solid rgba(45,55,72,0.70);
+  color: var(--text-secondary);
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 14px;
+}
+
+.graha-table td:first-child {
+  text-align: left;
+  font-family: 'Inter', sans-serif;
+  font-size: 15px;
+  font-weight: 600;
+  color: var(--gold);
+}
+
+.graha-table tr:last-child td { border-bottom: none; }
+.graha-table tr:hover td      { background: rgba(255,255,255,0.04); }
+
+/* Rashi badge */
+.rashi-badge {
+  display: inline-block;
+  font-size: 13px;
+  padding: 3px 9px;
+  border-radius: 5px;
+  font-family: 'Inter', sans-serif;
+  background: rgba(56,189,248,0.10);
+  color: var(--teal);
+  border: 1px solid rgba(56,189,248,0.30);
+  min-width: 9em;
+  text-align: center;
+  font-weight: 500;
+}
+
+/* =====================================================================
+   NATAL CHARTS (North Indian style)
+===================================================================== */
+.charts-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 28px;
+  margin-top: 4px;
+  margin-bottom: 28px;
+}
+@media (max-width: 700px) {
+  .charts-row { grid-template-columns: 1fr; }
+}
+
+.chart-wrap {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+}
+
+.chart-title {
+  font-family: 'EB Garamond', serif;
+  font-size: 17px;
+  font-weight: 600;
+  color: var(--text-secondary);
+  letter-spacing: 0.5px;
+  text-align: center;
+}
+
+/* The 4×4 grid. Corners are hidden; centre 2×2 = label cell */
+.ni-chart {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  grid-template-rows:    repeat(4, 1fr);
+  width: 100%;
+  max-width: 320px;
+  aspect-ratio: 1 / 1;
+  border: 2px solid var(--border-accent);
+  border-radius: 4px;
+  overflow: hidden;
+  background: var(--bg-card);
+}
+
+.ni-cell {
+  border: 1px solid var(--border);
+  padding: 5px 6px;
+  font-size: 11px;
+  line-height: 1.5;
+  color: var(--text-primary);
+  font-family: 'Inter', sans-serif;
+  min-height: 0;
+  overflow: hidden;
+}
+
+/* Centre label spans 2×2 */
+.ni-centre {
+  grid-column: 2 / 4;
+  grid-row:    2 / 4;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-family: 'EB Garamond', serif;
+  font-size: 15px;
+  font-weight: 600;
+  color: var(--text-muted);
+  border: 1px solid var(--border);
+  background: rgba(0,0,0,0.18);
+}
+
+/* Lagna cell highlight */
+.ni-cell.lagna-cell {
+  background: rgba(240,165,0,0.08);
+  border-color: rgba(240,165,0,0.40);
+}
+
+.ni-cell .house-num {
+  font-size: 9px;
+  color: var(--text-muted);
+  display: block;
+  margin-bottom: 1px;
+}
+
+.ni-cell .graha-list {
+  color: var(--gold);
+  font-size: 11px;
+  font-weight: 500;
+  display: block;
+  line-height: 1.4;
+}
+
+.lagna-label {
+  color: var(--gold);
+  font-size: 10px;
+  font-weight: 700;
+  display: block;
+  letter-spacing: 0.5px;
+}
+
+/* =====================================================================
+   FESTIVAL CALLOUT
+===================================================================== */
+.festival-callout {
+  display: flex;
+  align-items: flex-start;
+  gap: 16px;
+  padding: 20px 24px;
+  background: linear-gradient(135deg, rgba(240,165,0,0.10), rgba(255,107,0,0.06));
+  border: 1px solid rgba(240,165,0,0.35);
+  border-radius: var(--radius);
+  margin-bottom: 24px;
+}
+
+.festival-callout .fc-icon {
+  font-size: 34px;
+  flex-shrink: 0;
+  line-height: 1;
+}
+
+.festival-callout .fc-label {
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 1.2px;
+  text-transform: uppercase;
+  color: var(--gold-dim);
+  margin-bottom: 5px;
+}
+
+.festival-callout .fc-name {
+  font-family: 'EB Garamond', serif;
+  font-size: 24px;
+  color: var(--gold);
+  line-height: 1.3;
+}
+
+/* =====================================================================
+   ADHIKA MASA BADGE
+===================================================================== */
+.adhika-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  padding: 8px 18px;
+  background: rgba(74,222,128,0.10);
+  border: 1px solid rgba(74,222,128,0.25);
+  border-radius: 24px;
+  font-size: 15px;
+  color: var(--green);
+  margin-bottom: 24px;
+  font-weight: 500;
+}
+
+/* =====================================================================
+   TAGS
+===================================================================== */
+.tag {
+  display: inline-block;
+  font-size: 13px;
+  padding: 3px 10px;
+  border-radius: 5px;
+  font-family: 'JetBrains Mono', monospace;
+  margin: 0 2px;
+}
+.tag-gold    { background: rgba(240,165,0,0.08);  color: var(--gold);    border: 1px solid rgba(240,165,0,0.35); }
+.tag-saff    { background: rgba(255,107,0,0.08);  color: var(--saffron); border: 1px solid rgba(255,107,0,0.30); }
+.tag-teal    { background: rgba(56,189,248,0.10);  color: var(--teal);    border: 1px solid rgba(56,189,248,0.28); }
+.tag-muted   { background: rgba(107,124,147,0.15);  color: var(--text-muted); border: 1px solid rgba(107,124,147,0.25); }
+
+/* =====================================================================
+   SUNRISE / SUNSET ROW
+===================================================================== */
+.sunrise-row {
+  display: flex;
+  gap: 16px;
+}
+
+.sunrise-item {
+  flex: 1;
+  background: var(--bg-code);
+  border: 1.5px solid var(--border);
+  border-radius: var(--radius-sm);
+  padding: 18px 22px;
+  display: flex;
+  align-items: center;
+  gap: 14px;
+}
+
+.sunrise-item .si-icon { font-size: 28px; }
+.sunrise-item .si-label { font-size: 12px; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.8px; font-weight: 600; }
+.sunrise-item .si-val   { font-family: 'JetBrains Mono', monospace; font-size: 22px; color: var(--gold); font-weight: 600; }
+
+/* =====================================================================
+   RESPONSIVE
+===================================================================== */
+@media (max-width: 1100px) {
+  #main { max-width: 100%; }
+}
+
+@media (max-width: 900px) {
+  #main { padding: 28px 22px 60px; max-width: 100%; }
+  .limbs-grid { grid-template-columns: repeat(3, 1fr); }
+}
+
+@media (max-width: 640px) {
+  #main { padding: 20px 16px 60px; }
+  .form-grid { grid-template-columns: 1fr; }
+  .mini-cards-row { grid-template-columns: 1fr; }
+  .coord-grid { grid-template-columns: 1fr; }
+  .limbs-grid { grid-template-columns: repeat(2, 1fr); }
+  .page-hero { padding: 28px 22px; }
+  .page-hero h2 { font-size: 32px; }
+  .sunrise-row { flex-direction: column; }
+  .hero-moon { display: none; }
+}
+
+/* =====================================================================
+   ERROR MESSAGE
+===================================================================== */
+.error-msg {
+  padding: 18px 22px;
+  background: rgba(251,113,133,0.10);
+  border: 1.5px solid rgba(251,113,133,0.30);
+  border-radius: var(--radius-sm);
+  color: var(--rose);
+  font-size: 16px;
+  font-weight: 500;
+  margin-bottom: 24px;
+  display: none;
+}
+/* =====================================================================
+   FLATPICKR CALENDAR — custom theme
+===================================================================== */
+.flatpickr-calendar {
+  background: var(--bg-surface);
+  border: 1.5px solid var(--border-accent);
+  border-radius: var(--radius);
+  box-shadow: 0 8px 36px rgba(0,0,0,0.60);
+  font-family: 'Inter', sans-serif;
+  width: 364px;
+  overflow: hidden;
+}
+
+/* Month / year navigation bar */
+.flatpickr-months {
+  background: var(--bg-code);
+  border-bottom: 1px solid var(--border);
+  border-radius: var(--radius) var(--radius) 0 0;
+  padding: 10px 0;
+}
+
+.flatpickr-month {
+  height: 52px;
+}
+
+.flatpickr-current-month {
+  font-size: 20px;
+  font-weight: 600;
+  color: var(--text-primary);
+  padding-top: 8px;
+}
+
+.flatpickr-current-month .numInputWrapper input,
+.flatpickr-current-month select {
+  font-size: 20px !important;
+  font-weight: 600;
+  color: var(--text-primary);
+  background: transparent;
+  border: none;
+}
+
+.flatpickr-months .flatpickr-prev-month,
+.flatpickr-months .flatpickr-next-month {
+  color: var(--text-secondary);
+  fill: var(--text-secondary);
+  padding: 14px 16px;
+}
+.flatpickr-months .flatpickr-prev-month:hover,
+.flatpickr-months .flatpickr-next-month:hover {
+  color: var(--gold);
+  fill: var(--gold);
+}
+.flatpickr-months .flatpickr-prev-month svg,
+.flatpickr-months .flatpickr-next-month svg {
+  width: 20px;
+  height: 20px;
+}
+
+/* Day-of-week header */
+.flatpickr-weekdays {
+  background: var(--bg-code);
+  border-bottom: 1px solid var(--border);
+}
+
+span.flatpickr-weekday {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+/* Day grid */
+.flatpickr-days {
+  width: 364px;
+}
+.dayContainer {
+  width: 364px;
+  min-width: 364px;
+  max-width: 364px;
+  padding: 0;
+  gap: 0;
+}
+
+.flatpickr-day {
+  font-size: 16px;
+  font-weight: 500;
+  color: var(--text-primary);
+  border-radius: var(--radius-sm);
+  height: 48px;
+  line-height: 48px;
+  max-width: 52px;
+  flex-basis: 52px;
+  border: none;
+}
+
+.flatpickr-day:hover {
+  background: var(--bg-code);
+  border: 1.5px solid var(--border-accent);
+  color: var(--text-primary);
+}
+
+.flatpickr-day.today {
+  border: 2px solid var(--saffron);
+  color: var(--saffron);
+  font-weight: 700;
+}
+.flatpickr-day.today:hover {
+  background: rgba(255,107,0,0.08);
+}
+
+.flatpickr-day.selected,
+.flatpickr-day.selected:hover {
+  background: var(--gold);
+  border-color: var(--gold);
+  color: #ffffff;
+  font-weight: 700;
+}
+
+.flatpickr-day.prevMonthDay,
+.flatpickr-day.nextMonthDay {
+  color: var(--text-muted);
+  opacity: 0.5;
+}
+
+/* Year input spinner arrows */
+.numInputWrapper span {
+  border-color: var(--border);
+}
+.numInputWrapper span svg path {
+  fill: var(--text-muted);
+}
+.numInputWrapper:hover {
+  background: var(--bg-code);
+}
+
+.flatpickr-calendar.arrowTop::before,
+.flatpickr-calendar.arrowTop::after {
+  border-bottom-color: var(--border-accent);
+}
+.flatpickr-calendar.arrowBottom::before,
+.flatpickr-calendar.arrowBottom::after {
+  border-top-color: var(--border-accent);
+}
+
+.flatpickr-weekwrapper { display: none !important; }
+</style>
+<style>
+/* =====================================================================
+   FESTIVAL TABLE STYLES
+===================================================================== */
+.festival-table-wrap {
+  overflow-x: auto;
+}
+
+.festival-year-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 15px;
+}
+
+.festival-year-table th {
+  text-align: left;
+  padding: 13px 18px;
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+  color: var(--text-muted);
+  background: rgba(0,0,0,0.30);
+  border-bottom: 1.5px solid var(--border);
+  white-space: nowrap;
+}
+
+.festival-year-table td {
+  padding: 14px 18px;
+  border-bottom: 1px solid rgba(45,55,72,0.70);
+  vertical-align: middle;
+}
+
+.festival-year-table tr:last-child td {
+  border-bottom: none;
+}
+
+.festival-year-table tr:hover td {
+  background: rgba(255,255,255,0.035);
+}
+
+/* Date cell */
+.fest-date-cell {
+  white-space: nowrap;
+  min-width: 130px;
+}
+
+.fest-date-main {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 14px;
+  color: var(--teal);
+  font-weight: 600;
+  display: block;
+}
+
+.fest-date-day {
+  font-size: 12px;
+  color: var(--text-muted);
+  font-weight: 500;
+  display: block;
+  margin-top: 3px;
+  letter-spacing: 0.3px;
+}
+
+/* Festival name cell */
+.fest-names-cell {
+  min-width: 220px;
+}
+
+.fest-single {
+  font-family: 'EB Garamond', serif;
+  font-size: 19px;
+  color: var(--gold);
+  font-weight: 600;
+}
+
+.fest-multi-wrap {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.fest-multi-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.fest-bullet {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: var(--saffron);
+  flex-shrink: 0;
+}
+
+.fest-name-text {
+  font-family: 'EB Garamond', serif;
+  font-size: 18px;
+  color: var(--gold);
+  font-weight: 600;
+  line-height: 1.3;
+}
+
+.fest-multi-count {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  margin-bottom: 6px;
+}
+
+.multi-pill {
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.8px;
+  text-transform: uppercase;
+  padding: 2px 8px;
+  background: rgba(255,107,0,0.15);
+  color: var(--saffron);
+  border: 1px solid rgba(255,107,0,0.35);
+  border-radius: 20px;
+}
+
+/* Panchanga context cell */
+.fest-context-cell {
+  min-width: 180px;
+}
+
+.fest-masa {
+  font-size: 14px;
+  color: var(--text-secondary);
+  font-weight: 500;
+  display: block;
+}
+
+.fest-tithi {
+  font-size: 13px;
+  color: var(--text-muted);
+  display: block;
+  margin-top: 3px;
+}
+
+/* Summary bar */
+.fest-summary {
+  display: flex;
+  align-items: center;
+  gap: 24px;
+  padding: 18px 26px;
+  background: rgba(0,0,0,0.20);
+  border-top: 1px solid var(--border);
+  flex-wrap: wrap;
+}
+
+.fest-summary-item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.fest-summary-num {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 28px;
+  font-weight: 600;
+  color: var(--gold);
+  line-height: 1;
+}
+
+.fest-summary-label {
+  font-size: 13px;
+  color: var(--text-muted);
+  font-weight: 500;
+  line-height: 1.4;
+}
+
+/* Empty state */
+.no-festivals {
+  padding: 60px 28px;
+  text-align: center;
+  color: var(--text-muted);
+  font-size: 17px;
+}
+
+/* Month group header row */
+.month-group-row td {
+  padding: 10px 18px 8px;
+  background: rgba(0,0,0,0.20);
+  border-bottom: 1px solid var(--border);
+  border-top: 1.5px solid var(--border);
+}
+
+.month-group-label {
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 1.5px;
+  text-transform: uppercase;
+  color: var(--saffron);
+}
+
+/* Progress during calculation */
+.calc-progress {
+  display: none;
+  padding: 20px 28px;
+  font-size: 15px;
+  color: var(--text-muted);
+}
+.calc-progress.visible { display: block; }
+.calc-progress-bar-wrap {
+  background: #2d3748;
+  border-radius: 20px;
+  height: 6px;
+  overflow: hidden;
+  border: 1px solid var(--border);
+  margin-top: 10px;
+}
+.calc-progress-bar {
+  height: 100%;
+  border-radius: 20px;
+  background: linear-gradient(90deg, var(--gold-dim), var(--gold));
+  transition: width 0.1s linear;
+  width: 0%;
+}
+
+.error-msg.visible { display: block; }
+</style>
+</head>
+<body>
+
+  <main id="main">
+
+    <!-- Hero -->
+    <div class="page-hero">
+      <div class="hero-moon">
+        <svg viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
+          <defs>
+            <radialGradient id="moonHalo" cx="50%" cy="50%" r="50%">
+              <stop offset="0%"   stop-color="rgba(255,240,180,0.13)"/>
+              <stop offset="55%"  stop-color="rgba(255,230,140,0.06)"/>
+              <stop offset="100%" stop-color="rgba(255,230,140,0)"/>
+            </radialGradient>
+            <radialGradient id="moonAtmos" cx="50%" cy="50%" r="50%">
+              <stop offset="0%"   stop-color="rgba(255,245,200,0.22)"/>
+              <stop offset="70%"  stop-color="rgba(255,235,160,0.08)"/>
+              <stop offset="100%" stop-color="rgba(255,235,160,0)"/>
+            </radialGradient>
+            <radialGradient id="moonDisc" cx="42%" cy="38%" r="56%">
+              <stop offset="0%"   stop-color="#fffde8"/>
+              <stop offset="30%"  stop-color="#fef3c0"/>
+              <stop offset="65%"  stop-color="#fcd34d"/>
+              <stop offset="100%" stop-color="#b45309"/>
+            </radialGradient>
+            <radialGradient id="moonLimb" cx="50%" cy="50%" r="50%">
+              <stop offset="60%"  stop-color="rgba(0,0,0,0)"/>
+              <stop offset="100%" stop-color="rgba(20,10,0,0.38)"/>
+            </radialGradient>
+            <filter id="mareBlur" x="-30%" y="-30%" width="160%" height="160%">
+              <feGaussianBlur stdDeviation="1.2"/>
+            </filter>
+          </defs>
+          <circle cx="50" cy="50" r="50" fill="url(#moonHalo)"/>
+          <circle cx="50" cy="50" r="40" fill="url(#moonAtmos)"/>
+          <circle cx="50" cy="50" r="28" fill="url(#moonDisc)"/>
+          <g filter="url(#mareBlur)" opacity="0.55">
+            <ellipse cx="42" cy="40" rx="7" ry="5.5" transform="rotate(-20,42,40)" fill="rgba(100,70,10,0.45)"/>
+            <ellipse cx="54" cy="38" rx="4.5" ry="3.5" transform="rotate(10,54,38)" fill="rgba(90,60,10,0.35)"/>
+            <ellipse cx="56" cy="48" rx="5" ry="3.5" transform="rotate(15,56,48)" fill="rgba(80,55,10,0.30)"/>
+            <ellipse cx="44" cy="56" rx="4" ry="3"   transform="rotate(-10,44,56)" fill="rgba(90,60,10,0.28)"/>
+            <ellipse cx="36" cy="48" rx="3.5" ry="5" transform="rotate(5,36,48)"  fill="rgba(80,55,10,0.25)"/>
+          </g>
+          <circle cx="50" cy="50" r="28" fill="url(#moonLimb)"/>
+          <ellipse cx="44" cy="40" rx="7" ry="5" fill="rgba(255,255,240,0.18)"/>
+        </svg>
+      </div>
+      <svg class="hero-stars" viewBox="0 0 800 130" preserveAspectRatio="xMidYMid slice" xmlns="http://www.w3.org/2000/svg">
+        <defs>
+          <filter id="starGlow" x="-200%" y="-200%" width="500%" height="500%">
+            <feGaussianBlur stdDeviation="1.6" result="blur"/>
+            <feMerge><feMergeNode in="blur"/><feMergeNode in="SourceGraphic"/></feMerge>
+          </filter>
+          <filter id="starGlowSm" x="-200%" y="-200%" width="500%" height="500%">
+            <feGaussianBlur stdDeviation="0.8" result="blur"/>
+            <feMerge><feMergeNode in="blur"/><feMergeNode in="SourceGraphic"/></feMerge>
+          </filter>
+        </defs>
+        <circle cx="35"  cy="12"  r="0.7" fill="white" opacity="0.40"/>
+        <circle cx="78"  cy="42"  r="0.6" fill="white" opacity="0.35"/>
+        <circle cx="118" cy="19"  r="0.7" fill="white" opacity="0.38"/>
+        <circle cx="195" cy="35"  r="0.7" fill="white" opacity="0.40"/>
+        <circle cx="272" cy="22"  r="0.7" fill="white" opacity="0.38"/>
+        <circle cx="382" cy="30"  r="0.6" fill="white" opacity="0.34"/>
+        <circle cx="488" cy="62"  r="0.7" fill="white" opacity="0.40"/>
+        <circle cx="628" cy="22"  r="0.7" fill="white" opacity="0.39"/>
+        <circle cx="762" cy="18"  r="0.7" fill="white" opacity="0.40"/>
+        <g filter="url(#starGlowSm)">
+          <circle cx="142" cy="45"  r="1.1" fill="white"   opacity="0.65"/>
+          <circle cx="295" cy="42"  r="1.1" fill="#fff8e0" opacity="0.68"/>
+          <circle cx="510" cy="48"  r="1.0" fill="#ffe8c0" opacity="0.65"/>
+          <circle cx="720" cy="30"  r="1.1" fill="#fff0d0" opacity="0.65"/>
+        </g>
+        <g filter="url(#starGlow)">
+          <circle cx="95"  cy="22"  r="1.5" fill="white"   opacity="0.92"/>
+          <circle cx="210" cy="55"  r="1.6" fill="#fff8e8" opacity="0.95"/>
+          <circle cx="475" cy="32"  r="1.6" fill="#fffde0" opacity="0.95"/>
+          <circle cx="615" cy="55"  r="1.5" fill="white"   opacity="0.90"/>
+        </g>
+        <g opacity="0.82" filter="url(#starGlow)">
+          <polygon points="160,21 161.4,27.2 168,28 161.4,28.8 160,35 158.6,28.8 152,28 158.6,27.2" fill="white"/>
+        </g>
+        <g opacity="0.78" filter="url(#starGlow)">
+          <polygon points="405,15 406.2,21.2 413,22 406.2,22.8 405,29 403.8,22.8 397,22 403.8,21.2" fill="white"/>
+        </g>
+      </svg>
+      <div class="hero-kicker">Vedic Calendar</div>
+      <h2>Srikanta's <span>Festival Calendar</span></h2>
+      <p class="desc">Browse all festivals and auspicious days for any year at your chosen location.</p>
+    </div>
+
+    <!-- Input Card -->
+    <div class="input-card">
+      <div class="card-hdr">
+        <div class="card-icon icon-gold">🪔</div>
+        <div class="card-hdr-text">
+          <h3>Year &amp; Location</h3>
+          <p>Choose a year and location to see all festivals</p>
+        </div>
+      </div>
+      <div class="card-body">
+        <form id="festivalForm">
+          <div class="form-grid">
+            <div class="form-group">
+              <label for="inputYear">Year</label>
+              <input type="number" id="inputYear" min="1900" max="2200" placeholder="e.g. 2025">
+            </div>
+            <div class="form-group">
+              <label for="inputCity">Location</label>
+              <select id="inputCity">
+                <option value="12.9716,77.5946">Bangalore (Bengaluru)</option>
+                <option value="12.2958,76.6394">Mysore (Mysuru)</option>
+                <option value="13.0033,76.1004">Hassan</option>
+                <option value="16.8524,74.5815">Sangli / Miraj</option>
+                <option value="37.7799,-121.9780">San Ramon, CA</option>
+                <option value="custom">Custom Coordinates</option>
+              </select>
+            </div>
+            <div class="form-group full" id="customCoordsWrap" style="display:none">
+              <div class="coord-grid">
+                <div class="form-group">
+                  <label for="inputLat">Latitude (°N)</label>
+                  <input type="number" id="inputLat" step="0.001" value="12.972">
+                </div>
+                <div class="form-group">
+                  <label for="inputLon">Longitude (°E)</label>
+                  <input type="number" id="inputLon" step="0.001" value="77.595">
+                </div>
+              </div>
+            </div>
+          </div>
+          <div class="error-msg" id="errorMsg"></div>
+          <button type="submit" class="btn-calc" id="calcBtn">
+            ✦ Calculate
+          </button>
+        </form>
+      </div>
+    </div>
+
+    <!-- Loading spinner -->
+    <div class="spinner-wrap" id="spinnerWrap">
+      <div class="spinner"></div>
+      <p id="spinnerText">Computing festival calendar…</p>
+    </div>
+
+    <!-- Output section -->
+    <div id="output" style="display:none">
+
+      <!-- Output header -->
+      <div class="output-header">
+        <div class="card-icon icon-gold" style="width:38px;height:38px;font-size:18px">🪔</div>
+        <h2 id="outputTitle">Festival Calendar</h2>
+        <span class="output-date-badge" id="outputBadge">—</span>
+      </div>
+
+      <!-- Festivals table card -->
+      <div class="section-card">
+        <div class="sc-header">
+          <div class="card-icon icon-saff">📅</div>
+          <h3>All Festivals &amp; Auspicious Days</h3>
+        </div>
+        <div class="sc-body" style="padding:0">
+          <div class="festival-table-wrap">
+            <table class="festival-year-table">
+              <thead>
+                <tr>
+                  <th>Date</th>
+                  <th>Festival(s)</th>
+                  <th>Lunar Context</th>
+                </tr>
+              </thead>
+              <tbody id="festivalTableBody">
+              </tbody>
+            </table>
+          </div>
+          <div class="no-festivals" id="noFestivalsMsg" style="display:none">
+            No festivals found for this year and location.
+          </div>
+          <div class="fest-summary" id="festSummary" style="display:none">
+            <div class="fest-summary-item">
+              <span class="fest-summary-num" id="summaryTotal">0</span>
+              <span class="fest-summary-label">Festival<br>Days</span>
+            </div>
+            <div class="fest-summary-item">
+              <span class="fest-summary-num" id="summaryMulti">0</span>
+              <span class="fest-summary-label">Days with<br>Multiple Festivals</span>
+            </div>
+            <div class="fest-summary-item">
+              <span class="fest-summary-num" id="summaryTotal2">0</span>
+              <span class="fest-summary-label">Total Festival<br>Occurrences</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+    </div><!-- /#output -->
+  </main>
+<script>
+/**
+ * panchangaEngine.js
+ * Vedic Panchanga Astronomical Engine
+ *
+ * A faithful JavaScript port of the C++ Panchanga engine.
+ * Algorithm reference: Paul Schlyter, "How to compute planetary positions"
+ *   http://www.stjarnhimlen.se/comp/ppcomp.html
+ *
+ * Implements:
+ *   - Keplerian orbital mechanics with Newton-Raphson Kepler solver
+ *   - Moon perturbation corrections (Meeus / Schlyter series)
+ *   - Ecliptic-to-equatorial coordinate transforms
+ *   - Topocentric parallax corrections for Moon & Sun
+ *   - Lahiri Ayanamsha
+ *   - The 5 Panchanga Limbs: Tithi, Vara, Nakshatra, Yoga, Karana
+ *   - Lagna (rising sign) with 31-band latitude table
+ *   - Navamsha Lagna
+ *   - Sunrise / Sunset
+ *   - Vedic lunar month detection with Adhika / Kshaya support
+ *   - Samvatsara (60-year cycle) year names
+ *   - Festival lookup table
+ */
+
+'use strict';
+
+// ---------------------------------------------------------------------------
+// Constants
+// ---------------------------------------------------------------------------
+const PI = Math.PI;
+const DEG2RAD = PI / 180.0;
+const RAD2DEG = 180.0 / PI;
+
+// Default observer location: Bangalore / Mysore area, IST UTC+5:30
+const DEFAULT_LONGITUDE  = 76.617;  // degrees East
+const DEFAULT_LATITUDE   = 12.3;    // degrees North
+const DEFAULT_TZ_HR      = 5;       // IST offset hours
+const DEFAULT_TZ_MIN     = 30;      // IST offset minutes
+
+// ---------------------------------------------------------------------------
+// Utilities
+// ---------------------------------------------------------------------------
+
+/** Reduce any angle to [0, 360). */
+function mod360(x) {
+    return x - Math.floor(x / 360.0) * 360.0;
+}
+
+/** Degree-based sin/cos helpers. */
+function sind(deg) { return Math.sin(deg * DEG2RAD); }
+function cosd(deg) { return Math.cos(deg * DEG2RAD); }
+function tand(deg) { return Math.tan(deg * DEG2RAD); }
+function atand(x)  { return Math.atan(x) * RAD2DEG; }
+function atan2d(y, x) { return Math.atan2(y, x) * RAD2DEG; }
+
+// ---------------------------------------------------------------------------
+// J2000 day computation
+// ---------------------------------------------------------------------------
+
+/**
+ * Compute integer J2000 days elapsed for a Gregorian date.
+ * Days since Dec 31.0 1999 (= Jan 1.0 2000 = J2000 epoch).
+ */
+function computeJ2000Days(day, month, year) {
+    return Math.trunc(367 * year
+         - Math.trunc(7 * (year + Math.trunc((month + 9) / 12)) / 4)
+         + Math.trunc(275 * month / 9)
+         + day
+         - 730530);
+}
+
+/**
+ * Build a full DateInfo object from user inputs.
+ * @param {number} day
+ * @param {number} month
+ * @param {number} year
+ * @param {number} localHour  (0-23)
+ * @param {number} localMin   (0-59)
+ * @param {number} longitude  (degrees East, default 76.617)
+ * @param {number} latitude   (degrees North, default 12.3)
+ * @param {number} tzHr       (timezone offset hours, default 5)
+ * @param {number} tzMin      (timezone offset minutes, default 30)
+ * @returns {object} DateInfo
+ */
+function buildDateInfo(day, month, year, localHour, localMin,
+                       longitude, latitude, tzHr, tzMin) {
+    longitude = longitude ?? DEFAULT_LONGITUDE;
+    latitude  = latitude  ?? DEFAULT_LATITUDE;
+    tzHr      = tzHr      ?? DEFAULT_TZ_HR;
+    tzMin     = tzMin      ?? DEFAULT_TZ_MIN;
+
+    const tzFracDay   = (tzHr + tzMin / 60.0) / 24.0;
+    const timeFrac    = (localHour * 60 + localMin) / 1440.0;
+    const j2000DaysInt = computeJ2000Days(day, month, year);
+    const j2000Day    = (timeFrac - tzFracDay) + j2000DaysInt;
+    const utHours     = ((localHour * 60 + localMin) - (tzHr * 60 + tzMin)) / 60.0;
+    const ayanamsha   = 23.8525 + 0.000038253 * j2000Day;
+
+    return {
+        dayOfMonth:  day,
+        month,
+        year,
+        localHour,
+        localMin,
+        tzHr,
+        tzMin,
+        tzFracDay,
+        j2000DaysInt,
+        j2000Day,
+        utHours,
+        ayanamsha,
+        longitude,
+        latitude
+    };
+}
+
+// ---------------------------------------------------------------------------
+// OrbitalBody: Keplerian mechanics with Newton-Raphson
+// ---------------------------------------------------------------------------
+
+class OrbitalBody {
+    /**
+     * @param {number} N  longitude of ascending node (deg)
+     * @param {number} i  inclination to ecliptic (deg)
+     * @param {number} w  argument of perihelion (deg)
+     * @param {number} a  semi-major axis (AU for planets; Earth radii for Moon)
+     * @param {number} e  eccentricity
+     * @param {number} M  mean anomaly (deg)
+     */
+    constructor(N, i, w, a, e, M) {
+        this.N = N;
+        this.i = i;
+        this.w = w;
+        this.a = a;
+        this.e = e;
+        this.M = mod360(M);
+
+        // Derived fields (populated by compute())
+        this.lonPerihelion  = 0;
+        this.meanLongitude  = 0;
+        this.trueAnomaly    = 0;
+        this.eccentricAnomaly = 0;
+        this.eclLon         = 0;
+        this.eclLat         = 0;
+        this.dist           = 0;
+    }
+
+    getMeanAnomaly()            { return this.M; }
+    getAscendingNodeLon()       { return this.N; }
+    getMeanLongitude()          { return mod360(this.N + this.w + this.M); }
+    getEclipticLongitude()      { return this.eclLon; }
+    getEclipticLatitude()       { return this.eclLat; }
+    getDistance()               { return this.dist; }
+
+    /**
+     * Solve Kepler's equation and compute ecliptic coordinates.
+     */
+    compute() {
+        this.lonPerihelion = mod360(this.N + this.w);
+        this.meanLongitude = mod360(this.M + this.lonPerihelion);
+
+        // Initial estimate for eccentric anomaly E via first-order series.
+        let E = this.M + RAD2DEG * this.e * sind(this.M) *
+                (1.0 + this.e * cosd(this.M));
+
+        // Newton-Raphson refinement (< 0.05 deg tolerance).
+        let deltaE = 1.0;
+        while (Math.abs(deltaE) > 0.05) {
+            const E1 = E - (E - RAD2DEG * this.e * sind(E) - this.M) /
+                           (1.0 - this.e * cosd(E));
+            deltaE = E - E1;
+            E = E1;
+        }
+        this.eccentricAnomaly = E;
+
+        // Position in orbital plane.
+        const xOrb = this.a * (cosd(E) - this.e);
+        const yOrb = this.a * (sind(E) * Math.sqrt(1.0 - this.e * this.e));
+
+        this.dist        = Math.sqrt(xOrb * xOrb + yOrb * yOrb);
+        this.trueAnomaly = mod360(atan2d(yOrb, xOrb));
+
+        // Orbital plane longitude = true anomaly + argument of perihelion.
+        const lonInOrbit = mod360(this.trueAnomaly + this.w);
+
+        // Rotate from orbital plane into the ecliptic frame.
+        const cosN = cosd(this.N);
+        const sinN = sind(this.N);
+        const cosL = cosd(lonInOrbit);
+        const sinL = sind(lonInOrbit);
+        const cosI = cosd(this.i);
+
+        const eclX = this.dist * (cosN * cosL - sinN * sinL * cosI);
+        const eclY = this.dist * (sinN * cosL + cosN * sinL * cosI);
+        const eclZ = this.dist * sinL * sind(this.i);
+
+        this.eclLon = mod360(atan2d(eclY, eclX));
+        this.eclLat = atan2d(eclZ, Math.sqrt(eclX * eclX + eclY * eclY));
+    }
+}
+
+// ---------------------------------------------------------------------------
+// Coordinate transforms
+// ---------------------------------------------------------------------------
+
+/**
+ * Ecliptic -> equatorial: Right Ascension (degrees).
+ * Standard rotation by obliquity ε:
+ *   y_eq = y*cos(ε) - z*sin(ε)
+ */
+function eclToEqRA(eclLon, eclLat, obliquity) {
+    const x = cosd(eclLon) * cosd(eclLat);
+    const y = sind(eclLon) * cosd(eclLat);
+    const z = sind(eclLat);
+    const yEq = y * cosd(obliquity) - z * sind(obliquity);
+    return mod360(atan2d(yEq, x));
+}
+
+/**
+ * Ecliptic -> equatorial: Declination (degrees).
+ * z_eq = y*sin(ε) + z*cos(ε)
+ */
+function eclToEqDecl(r, eclLon, eclLat, obliquity) {
+    const y   = r * sind(eclLon) * cosd(eclLat);
+    const z   = r * sind(eclLat);
+    const zEq = y * sind(obliquity) + z * cosd(obliquity);
+    return Math.asin(zEq / r) * RAD2DEG;
+}
+
+/**
+ * Geocentric RA for an outer planet.
+ * Adds the Sun's position vector to convert heliocentric -> geocentric.
+ */
+function geocentricRA(eclLon, eclLat, helioDist, planetObliquity,
+                      sunDist, sunEclLon, globalObliquity) {
+    let x = helioDist * cosd(eclLon) * cosd(eclLat);
+    let y = helioDist * sind(eclLon) * cosd(eclLat);
+    const z = helioDist * sind(eclLat);
+
+    const obl = (planetObliquity + globalObliquity) * DEG2RAD;
+    x += sunDist * cosd(sunEclLon);
+    y += sunDist * sind(sunEclLon);
+
+    const yEq = y * Math.cos(obl) + z * Math.sin(obl);
+    return mod360(atan2d(yEq, x));
+}
+
+// ---------------------------------------------------------------------------
+// Topocentric parallax corrections
+// ---------------------------------------------------------------------------
+
+function observerGeocentric(observerLat) {
+    const gcLat = observerLat - 0.1924 * sind(2.0 * observerLat);
+    const rho   = 0.99883 + 0.00167 * cosd(2.0 * observerLat);
+    return { gcLat, rho };
+}
+
+/**
+ * Topocentric right ascension of the Moon (degrees).
+ */
+function topoMoonRA(moonRA, moonDist, lst, observerLat, moonDecl) {
+    const mpar = Math.asin(1.0 / moonDist) * RAD2DEG;
+    const { gcLat, rho } = observerGeocentric(observerLat);
+    const hourAngle = mod360(lst * 15.0 - moonRA);
+    const topRA = moonRA - mpar * rho
+                  * cosd(gcLat)
+                  * sind(hourAngle)
+                  / cosd(moonDecl);
+    return topRA;
+}
+
+/**
+ * Topocentric RA for the Sun or planet (degrees).
+ */
+function topoRA(ra, dist, lst, observerLat, decl) {
+    const ppar = (8.794 / 3600.0) / dist;
+    const { gcLat, rho } = observerGeocentric(observerLat);
+    const hourAngle = mod360(lst * 15.0 - ra);
+    const topRA = ra - ppar * rho
+                  * cosd(gcLat)
+                  * sind(hourAngle)
+                  / cosd(decl);
+    return topRA;
+}
+
+// ---------------------------------------------------------------------------
+// Moon perturbation corrections (Meeus / Schlyter series)
+// ---------------------------------------------------------------------------
+
+function moonLonPerturbation(sunMeanLon, moonMeanLon, moonMeanAnom, moonAscNode, sunMeanAnom) {
+    const elongation    = moonMeanLon - sunMeanLon;
+    const argOfLat      = moonMeanLon - moonAscNode;
+
+    return -1.274 * sind(moonMeanAnom - 2.0 * elongation)
+           +0.658 * sind(2.0 * elongation)
+           -0.186 * sind(sunMeanAnom)
+           -0.059 * sind(2.0 * moonMeanAnom - 2.0 * elongation)
+           -0.057 * sind(moonMeanAnom - 2.0 * elongation + sunMeanAnom)
+           +0.053 * sind(moonMeanAnom + 2.0 * elongation)
+           +0.046 * sind(2.0 * elongation - sunMeanAnom)
+           +0.041 * sind(moonMeanAnom - sunMeanAnom)
+           -0.035 * sind(elongation)
+           -0.031 * sind(moonMeanAnom + sunMeanAnom)
+           -0.015 * sind(2.0 * argOfLat - 2.0 * elongation)
+           +0.011 * sind(moonMeanAnom - 4.0 * elongation);
+}
+
+function moonLatPerturbation(sunMeanLon, moonMeanLon, moonMeanAnom, moonAscNode) {
+    const elongation = moonMeanLon - sunMeanLon;
+    const argOfLat   = moonMeanLon - moonAscNode;
+
+    return -0.173 * sind(argOfLat - 2.0 * elongation)
+           -0.055 * sind(moonMeanAnom - argOfLat - 2.0 * elongation)
+           -0.046 * sind(moonMeanAnom + argOfLat - 2.0 * elongation)
+           +0.033 * sind(argOfLat + 2.0 * elongation)
+           +0.017 * sind(2.0 * moonMeanAnom + argOfLat);
+}
+
+function moonDistPerturbation(sunMeanLon, moonMeanLon, moonMeanAnom) {
+    const elongation = moonMeanLon - sunMeanLon;
+    return -0.58 * cosd(moonMeanAnom - 2.0 * elongation)
+           -0.46 * cosd(2.0 * elongation);
+}
+
+// ---------------------------------------------------------------------------
+// Sidereal time
+// ---------------------------------------------------------------------------
+
+function siderealTime(sunMeanLon, utHours, observerLon) {
+    const gmst0 = (sunMeanLon + 180.0) / 15.0;
+    let lst = gmst0 + utHours + observerLon / 15.0;
+    if (lst > 24.0) lst -= 24.0;
+    if (lst < 0.0)  lst += 24.0;
+    return { lst, gmst0 };
+}
+
+// ---------------------------------------------------------------------------
+// Core Panchanga computation
+// ---------------------------------------------------------------------------
+
+/**
+ * Compute full Panchanga state for a given J2000 floating-point day.
+ * @param {number} j2000Day
+ * @param {object} dateInfo  (must have utHours, longitude, latitude)
+ * @returns {object} state
+ */
+function computePanchanga(j2000Day, dateInfo) {
+    const d = j2000Day;
+
+    // ------------------------------------------------------------------
+    // Sun (Keplerian elements from Schlyter, epoch J2000)
+    // ------------------------------------------------------------------
+    const sun = new OrbitalBody(
+        0.0,
+        0.0,
+        282.9404 + 4.70935e-5  * d,   // w
+        1.0,                            // a = 1 AU
+        0.016709 - 1.151e-9    * d,   // e
+        356.047  + 0.9856002585 * d    // M
+    );
+
+    // ------------------------------------------------------------------
+    // Moon (Keplerian elements from Schlyter)
+    // ------------------------------------------------------------------
+    const moon = new OrbitalBody(
+        125.1228 - 0.0529538083  * d,  // N
+        5.1454,                          // i
+        318.0634 + 0.1643573223  * d,  // w
+        60.2666,                         // a (Earth radii)
+        0.0549,                          // e
+        115.3654 + 13.0649929509 * d   // M
+    );
+
+    sun.compute();
+    moon.compute();
+
+    const sunMeanAnom  = sun.getMeanAnomaly();
+    const moonMeanAnom = moon.getMeanAnomaly();
+    const sunMeanLon   = sun.getMeanLongitude();
+    const moonMeanLon  = moon.getMeanLongitude();
+    const moonAscNode  = moon.getAscendingNodeLon();
+
+    // Rahu = Moon's ascending node (retrograde motion)
+    const rahuLon = mod360(125.1228 - 0.0529538083 * d);
+
+    // Obliquity of the ecliptic
+    const obliquity = 23.4393 - 3.56e-7 * d;
+
+    // ------------------------------------------------------------------
+    // Local Sidereal Time
+    // ------------------------------------------------------------------
+    const { lst, gmst0 } = siderealTime(sunMeanLon, dateInfo.utHours, dateInfo.longitude);
+
+    // ------------------------------------------------------------------
+    // Moon perturbations + ecliptic coordinates
+    // ------------------------------------------------------------------
+    const moonPertLon  = moonLonPerturbation(sunMeanLon, moonMeanLon, moonMeanAnom, moonAscNode, sunMeanAnom);
+    const moonPertLat  = moonLatPerturbation(sunMeanLon, moonMeanLon, moonMeanAnom, moonAscNode);
+    const moonPertDist = moonDistPerturbation(sunMeanLon, moonMeanLon, moonMeanAnom);
+
+    const moonEclLon  = moon.getEclipticLongitude() + moonPertLon;
+    const moonEclLat  = moon.getEclipticLatitude()  + moonPertLat;
+    const moonEclDist = moon.getDistance()           + moonPertDist;
+
+    // ------------------------------------------------------------------
+    // Sun ecliptic -> equatorial
+    // ------------------------------------------------------------------
+    const sunEclLon  = sun.getEclipticLongitude();
+    const sunEclLat  = sun.getEclipticLatitude();
+    const sunDist    = sun.getDistance();
+
+    const sunRA   = eclToEqRA(sunEclLon, sunEclLat, obliquity);
+    const sunDecl = eclToEqDecl(sunDist, sunEclLon, sunEclLat, obliquity);
+
+    // ------------------------------------------------------------------
+    // Moon ecliptic -> equatorial, then topocentric correction
+    // ------------------------------------------------------------------
+    const moonRA   = eclToEqRA(moonEclLon, moonEclLat, obliquity);
+    const moonDecl = eclToEqDecl(moonEclDist, moonEclLon, moonEclLat, obliquity);
+
+    let moonTopRA = topoMoonRA(moonRA, moon.getDistance(), lst,
+                               dateInfo.latitude, moonDecl);
+
+    let sunTopRA  = topoRA(sunRA, sunDist, lst, dateInfo.latitude, sunDecl);
+
+    // Small empirical correction to Sun's topocentric RA (equation of time term).
+    sunTopRA += 2.4 * sind(2.0 * sunTopRA);
+
+    // Lahiri ayanamsha for this day.
+    const ayanamsha = 23.8525 + 0.000038253 * d;
+
+    // ------------------------------------------------------------------
+    // Small empirical Moon correction (removes systematic offset).
+    // ------------------------------------------------------------------
+    let mer = (1.5 + 0.00322 * moonTopRA) *
+              Math.cos((2.0 * moonTopRA + 70.0) * DEG2RAD) + 0.2;
+    moonTopRA -= mer;
+    if (moonTopRA < 50.0)  moonTopRA -= 1.0;
+    if (moonTopRA > 330.0) moonTopRA -= 1.0;
+
+    // Final sidereal longitudes used by Panchanga derivation.
+    const moonSiderealLon = moonTopRA;
+    const sunSiderealLon  = sunTopRA;
+
+    // ------------------------------------------------------------------
+    // Vara (weekday)
+    // ------------------------------------------------------------------
+    const j2000DaysInt = dateInfo.j2000DaysInt;
+    const varaX = ((j2000DaysInt + 5) % 7 + 7) % 7;
+    const varaName = VARA_NAMES[varaX];
+    const varaIndex = varaX;
+
+    // ------------------------------------------------------------------
+    // Tithi (lunar day)
+    // ------------------------------------------------------------------
+    const diff = mod360(moonTopRA - sunTopRA);
+    const thithiFrac  = diff / 12.0;
+    const thithiIndex = Math.trunc(thithiFrac);
+
+    // ------------------------------------------------------------------
+    // Nakshatra (lunar mansion) and Pada (quarter)
+    // ------------------------------------------------------------------
+    const siderealMoon = mod360(moonTopRA - ayanamsha);
+    const nakFrac      = siderealMoon / 13.333333333;
+    const nakIndex     = Math.trunc(siderealMoon / (360.0 / 27.0)) + 1;
+
+    const nakPos  = siderealMoon / (360.0 / 27.0);
+    const nakInt  = Math.trunc(nakPos);
+    const nakFracPart = nakPos - nakInt;
+    const pada    = Math.trunc(nakFracPart * 4.0);
+
+    // ------------------------------------------------------------------
+    // Yoga (sum of sidereal Sun + Moon longitudes, mod 360, / 13.333)
+    // ------------------------------------------------------------------
+    const yogaLon   = mod360(mod360(moonTopRA - ayanamsha) + mod360(sunTopRA - ayanamsha));
+    const yogaIndex = Math.trunc(yogaLon / 13.333333333);
+
+    // ------------------------------------------------------------------
+    // Karana (half-tithi)
+    // ------------------------------------------------------------------
+    const karanaRaw   = Math.trunc(diff / 6.0);
+    const karanaIndex = computeKarana(karanaRaw);
+
+    // ------------------------------------------------------------------
+    // Rashi (Moon's zodiac sign)
+    // ------------------------------------------------------------------
+    const rashiIndex = Math.trunc(mod360(moonSiderealLon - ayanamsha) / 30.0);
+
+    return {
+        j2000Day,
+        moonSiderealLon,
+        sunSiderealLon,
+        sunEclLon,
+        sunEclLat,
+        sunDist,
+        sunRA,
+        sunDecl,
+        moonEclLon,
+        moonEclLat,
+        moonDecl,
+        rahuLon,
+        ayanamsha,
+        obliquity,
+        gmst0,
+        lst,
+        varaName,
+        varaIndex,
+        thithiIndex,
+        thithiFrac,
+        nakIndex,
+        nakFrac,
+        pada,
+        yogaIndex,
+        karanaIndex,
+        rashiIndex,
+        // For planet calculations
+        sunMeanLon,
+        j2000DaysInt
+    };
+}
+
+// ---------------------------------------------------------------------------
+// Karana computation (11 types: 4 fixed, 7 repeating)
+// ---------------------------------------------------------------------------
+
+function computeKarana(karanaRaw) {
+    // Karanas 0: Kimstughna (fixed, first half of Shukla Pratipada)
+    // Karanas 1-56: 7 repeating (Bava, Balava, Kaulava, Taitila, Garaja, Vanija, Vishti)
+    // Karanas 57-59: 3 fixed (Shakuni, Chatushpada, Naga)
+    if (karanaRaw === 0) return 0;  // Kimstughna
+    if (karanaRaw >= 57) {
+        return 7 + (karanaRaw - 57);  // fixed: Shakuni, Chatushpada, Naga
+    }
+    return 1 + ((karanaRaw - 1) % 7);  // 7 repeating
+}
+
+// ---------------------------------------------------------------------------
+// Planet positions (five classical outer planets)
+// ---------------------------------------------------------------------------
+
+/**
+ * Compute geocentric RA (degrees) for all five classical planets.
+ * @param {number} j2000Day
+ * @param {object} pancState  result of computePanchanga (needs sunDist, sunEclLon, obliquity)
+ * @returns {object}  {mangalaRA, budhaRA, guruRA, shukraRA, shaniRA}
+ */
+function computePlanetRAs(j2000Day, pancState) {
+    const d = j2000Day;
+    const { sunDist, sunEclLon, obliquity } = pancState;
+
+    function geoRA(planet, inclination) {
+        planet.compute();
+        return mod360(geocentricRA(
+            planet.getEclipticLongitude(),
+            planet.getEclipticLatitude(),
+            planet.getDistance(),
+            inclination,
+            sunDist, sunEclLon, obliquity
+        ));
+    }
+
+    // Mangala (Mars)
+    const mangalaObl = 1.8497 - 1.78e-8 * d;
+    const mangala = new OrbitalBody(
+        49.5574  + 2.11081e-5  * d,
+        mangalaObl,
+        286.5016 + 2.92961e-5  * d,
+        1.523688,
+        0.093405 + 2.516e-9    * d,
+        18.6021  + 0.5240207766 * d
+    );
+
+    // Budha (Mercury)
+    const budhaObl = 7.0047 + 5.0e-8 * d;
+    const budha = new OrbitalBody(
+        48.3313  + 3.24587e-5  * d,
+        budhaObl,
+        29.1241  + 1.01444e-5  * d,
+        0.387098,
+        0.205635 + 5.59e-10    * d,
+        168.6562 + 4.0923344368 * d
+    );
+
+    // Guru (Jupiter)
+    const guruObl = 1.303 - 1.557e-7 * d;
+    const guru = new OrbitalBody(
+        100.4542 + 2.76854e-5  * d,
+        guruObl,
+        273.8777 + 1.64505e-5  * d,
+        5.20256,
+        0.048498 + 4.469e-9    * d,
+        19.895   + 0.0830853001 * d
+    );
+
+    // Shukra (Venus)
+    const shukraObl = 3.3946 + 2.75e-8 * d;
+    const shukra = new OrbitalBody(
+        76.6799  + 2.4659e-5   * d,
+        shukraObl,
+        54.891   + 1.38374e-5  * d,
+        0.72333,
+        0.006773 - 1.302e-9    * d,
+        48.0052  + 1.6021302244 * d
+    );
+
+    // Shani (Saturn)
+    const shaniObl = 2.4886 - 1.081e-7 * d;
+    const shani = new OrbitalBody(
+        113.6634 + 2.3898e-5   * d,
+        shaniObl,
+        339.3939 + 2.97661e-5  * d,
+        9.55475,
+        0.055546 - 9.499e-9    * d,
+        316.967  + 0.0334442282 * d
+    );
+
+    return {
+        mangalaRA: geoRA(mangala, mangalaObl),
+        budhaRA:   geoRA(budha,   budhaObl),
+        guruRA:    geoRA(guru,    guruObl),
+        shukraRA:  geoRA(shukra,  shukraObl),
+        shaniRA:   geoRA(shani,   shaniObl)
+    };
+}
+
+// ---------------------------------------------------------------------------
+// Sunrise / Sunset
+// ---------------------------------------------------------------------------
+
+/**
+ * Compute sunrise and sunset in decimal IST hours.
+ * @param {number} j2000Day  integer day
+ * @param {object} dateInfo
+ * @returns {{sunriseIST: number, sunsetIST: number}}
+ */
+function computeSunrise(j2000Day, dateInfo) {
+    const kIstOffset = 5.5;
+    const kRiseAlt   = -0.583;   // solar altitude at geometric rise (degrees)
+
+    // Evaluate Sun position at approximately local noon.
+    const dayInt  = Math.trunc(j2000Day);
+    const noonDay = dayInt + (12.0 - kIstOffset) / 24.0;
+
+    // Temporary dateInfo for noon computation.
+    const noonInfo = Object.assign({}, dateInfo, {
+        utHours:  12.0 - kIstOffset,
+        j2000Day: noonDay
+    });
+    const noonState = computePanchanga(noonDay, noonInfo);
+
+    // Time of Sun's transit (upper culmination) in UT hours.
+    let utTransit = (noonState.sunRA - noonState.gmst0 * 15.0 - dateInfo.longitude) / 15.0;
+    utTransit = ((utTransit % 24.0) + 24.0) % 24.0;
+
+    // Hour angle at rise/set.
+    const cosLHA = (sind(kRiseAlt)
+                    - sind(dateInfo.latitude) * sind(noonState.sunDecl))
+                 / (cosd(dateInfo.latitude) * cosd(noonState.sunDecl));
+
+    let lhaHours = 12.0;   // fallback for polar cases
+    if (cosLHA >= -1.0 && cosLHA <= 1.0) {
+        lhaHours = Math.acos(cosLHA) * RAD2DEG / 15.0;
+    }
+
+    const sunriseIST = utTransit - lhaHours + kIstOffset;
+    const sunsetIST  = utTransit + lhaHours + kIstOffset;
+
+    return { sunriseIST, sunsetIST };
+}
+
+// ---------------------------------------------------------------------------
+// Lagna (rising sign) computation — RAMC-based astronomical ascendant
+// ---------------------------------------------------------------------------
+
+/**
+ * Tropical longitude of the Ascendant using the standard RAMC formula.
+ * RAMC = LST × 15 degrees.
+ * tan(Asc) = -cos(RAMC) / [sin(ε)·tan(φ) + cos(ε)·sin(RAMC)]
+ *
+ * @param {number} lst        Local Sidereal Time (hours, 0–24)
+ * @param {number} obliquity  Obliquity of ecliptic (degrees)
+ * @param {number} latitude   Observer latitude (degrees North)
+ * @returns {number} Tropical Ascendant longitude (degrees, 0–360)
+ */
+function computeAscendantTropical(lst, obliquity, latitude) {
+    const lat  = Math.max(-89.9, Math.min(89.9, latitude));
+    const RAMC = lst * 15.0;
+    const x    = -cosd(RAMC);
+    const y    = sind(obliquity) * tand(lat) + cosd(obliquity) * sind(RAMC);
+    return mod360(atan2d(x, y));
+}
+
+/**
+ * Compute Lagna (sidereal rising sign).
+ * @param {number} lst        Local Sidereal Time (hours)
+ * @param {number} obliquity  Obliquity of ecliptic (degrees)
+ * @param {number} latitude   Observer latitude (degrees North)
+ * @param {number} ayanamsha  Lahiri ayanamsha (degrees)
+ * @returns {number} 1-based rashi index (1 = Mesha … 12 = Meena)
+ */
+function computeLagnaFromRAMC(lst, obliquity, latitude, ayanamsha) {
+    const ascSidereal = mod360(computeAscendantTropical(lst, obliquity, latitude) - ayanamsha);
+    return Math.floor(ascSidereal / 30.0) + 1;
+}
+
+/**
+ * Compute Navamsha Lagna.
+ * @param {number} lst        Local Sidereal Time (hours)
+ * @param {number} obliquity  Obliquity of ecliptic (degrees)
+ * @param {number} latitude   Observer latitude (degrees North)
+ * @param {number} ayanamsha  Lahiri ayanamsha (degrees)
+ * @returns {number} 1-based navamsha rashi index (1–12)
+ */
+function computeNavamshaLagnaFromRAMC(lst, obliquity, latitude, ayanamsha) {
+    const ascSidereal = mod360(computeAscendantTropical(lst, obliquity, latitude) - ayanamsha);
+    return (Math.floor(ascSidereal * 9.0 / 30.0) % 12) + 1;
+}
+
+// ---------------------------------------------------------------------------
+// Vedic lunar calendar: month boundary iterators
+// ---------------------------------------------------------------------------
+
+/**
+ * Advance j2000Day to the next Amavasya (thithi index 29).
+ * Returns new j2000Day.
+ */
+function advanceToMonthEnd(j2000Day, dateInfoTemplate) {
+    let day = j2000Day;
+    let info = makeDateInfoForDay(day, dateInfoTemplate);
+    let state = computePanchanga(day, info);
+
+    if (state.thithiIndex < 29) {
+        day += (29 - state.thithiIndex) - 1;
+    }
+    state = computePanchanga(day, makeDateInfoForDay(day, dateInfoTemplate));
+
+    let guard = 0;
+    while (state.thithiIndex !== 29 && guard < 200) {
+        day += 0.5;
+        state = computePanchanga(day, makeDateInfoForDay(day, dateInfoTemplate));
+        guard++;
+    }
+    return day;
+}
+
+/**
+ * Advance from current day to next Shukla Pratipada (thithi 0, early frac).
+ */
+function advanceToMonthStart(j2000Day, dateInfoTemplate) {
+    let day = j2000Day + 32.0;
+    let state = computePanchanga(day, makeDateInfoForDay(day, dateInfoTemplate));
+
+    if (state.thithiIndex > 0) {
+        day -= state.thithiIndex - 1;
+    }
+
+    let guard = 0;
+    state = computePanchanga(day, makeDateInfoForDay(day, dateInfoTemplate));
+    while (state.thithiIndex !== 0 && guard < 200) {
+        day -= 0.5;
+        state = computePanchanga(day, makeDateInfoForDay(day, dateInfoTemplate));
+        guard++;
+    }
+    guard = 0;
+    state = computePanchanga(day, makeDateInfoForDay(day, dateInfoTemplate));
+    while (state.thithiFrac > 0.5 && guard < 100) {
+        day -= 0.25;
+        state = computePanchanga(day, makeDateInfoForDay(day, dateInfoTemplate));
+        guard++;
+    }
+    return day;
+}
+
+/**
+ * Retreat (walk backward) to the current month's Shukla Pratipada.
+ */
+function retreatToMonthStart(j2000Day, dateInfoTemplate) {
+    let day = j2000Day;
+    let state = computePanchanga(day, makeDateInfoForDay(day, dateInfoTemplate));
+
+    if (state.thithiIndex > 0) {
+        day -= state.thithiIndex - 1;
+    }
+
+    let guard = 0;
+    state = computePanchanga(day, makeDateInfoForDay(day, dateInfoTemplate));
+    while (state.thithiIndex !== 0 && guard < 200) {
+        day -= 0.5;
+        state = computePanchanga(day, makeDateInfoForDay(day, dateInfoTemplate));
+        guard++;
+    }
+    guard = 0;
+    state = computePanchanga(day, makeDateInfoForDay(day, dateInfoTemplate));
+    while (state.thithiFrac > 0.5 && guard < 100) {
+        day -= 0.25;
+        state = computePanchanga(day, makeDateInfoForDay(day, dateInfoTemplate));
+        guard++;
+    }
+    return day;
+}
+
+/**
+ * Build a minimal dateInfo using j2000Day and a template for location data.
+ */
+function makeDateInfoForDay(j2000Day, template) {
+    // Approximate UT hours from fractional day
+    const fracDay = j2000Day - Math.floor(j2000Day);
+    const utHours = fracDay * 24.0;
+    return {
+        j2000Day,
+        j2000DaysInt: Math.floor(j2000Day),
+        utHours,
+        longitude: template.longitude,
+        latitude:  template.latitude
+    };
+}
+
+/**
+ * Detect if current lunar month is adhika (intercalary).
+ * Sun doesn't change rashi within the month.
+ */
+function isAdhikaMonth(j2000Day, pancState, dateInfoTemplate) {
+    const soura  = mod360(pancState.sunSiderealLon - pancState.ayanamsha);
+    const Sst    = soura / 30.0;
+
+    const startRashi = Math.trunc(Sst);
+    let day = j2000Day + 28;
+    let state = computePanchanga(day, makeDateInfoForDay(day, dateInfoTemplate));
+
+    let guard = 0;
+    while (state.thithiFrac < 29.5 && guard < 200) {
+        day += 0.5;
+        state = computePanchanga(day, makeDateInfoForDay(day, dateInfoTemplate));
+        guard++;
+    }
+
+    const SsEnd    = mod360(state.sunSiderealLon - state.ayanamsha) / 30.0;
+    const endRashi = Math.trunc(SsEnd);
+
+    if (startRashi === endRashi) return true;
+    if (startRashi === (endRashi - 2)) return false; // kshaya
+    return false;
+}
+
+/**
+ * Find the start J2000 days for all 12 Vedic lunar months of the year
+ * and detect any adhika masa.
+ * @param {number} j2000Day  current query day
+ * @param {object} dateInfoTemplate
+ * @returns {{monthStarts: number[], hasAdhika: boolean, adhikaMonthIndex: number, adhikaStart: number}}
+ */
+function findYearStart(j2000Day, dateInfoTemplate) {
+    const ADHIKA_NAMES = [
+        'Adhika Chaitra',    'Adhika Vaishaka',
+        'Adhika Jyeshta',    'Adhika Ashada',
+        'Adhika Shravana',   'Adhika Bhadrapada',
+        'Adhika Ashvayuja',  'Adhika Karthika',
+        'Adhika Margashira', 'Adhika Pushya',
+        'Adhika Magha',      'Adhika Palguna',
+        'Adhika Palguna'
+    ];
+
+    let day = j2000Day;
+
+    // Find Chaitra Padya = the day after the Phalguna Amavasya (last Amavasya
+    // while the sun is in Meena, rashi 11).
+    // Strategy: find the nearest Amavasya, then walk backward month-by-month
+    // until we reach the one whose sun is in Meena.
+    day = advanceToMonthEnd(day, dateInfoTemplate);
+    let state = computePanchanga(day, makeDateInfoForDay(day, dateInfoTemplate));
+
+    // If we landed far ahead (sun past Mesha), retreat to the year-start region.
+    let souraPos = mod360(state.sunSiderealLon - state.ayanamsha) / 30.0;
+    if (souraPos > 1.0) {
+        day -= souraPos * 30 + 5;
+        state = computePanchanga(day, makeDateInfoForDay(day, dateInfoTemplate));
+        day = advanceToMonthEnd(day, dateInfoTemplate);
+        state = computePanchanga(day, makeDateInfoForDay(day, dateInfoTemplate));
+    }
+
+    // Walk backward through Amavasyas until we find the one in Meena (rashi 11).
+    // That is Phalguna Amavasya; the next day is Chaitra Padya.
+    for (let guard = 0; guard < 14; guard++) {
+        const soura = mod360(state.sunSiderealLon - state.ayanamsha);
+        const rashi = Math.trunc(soura / 30.0);
+        if (rashi === 11) break;   // found Phalguna Amavasya
+        // Step back one lunar month and find its Amavasya
+        day -= 30;
+        day = advanceToMonthEnd(day, dateInfoTemplate);
+        state = computePanchanga(day, makeDateInfoForDay(day, dateInfoTemplate));
+    }
+
+    // Now day is the Phalguna Amavasya; Chaitra Padya is the next month start.
+    // Use Math.floor(day) + 2 to land solidly past Amavasya into Pratipada,
+    // avoiding the fractional-boundary issue where day+1 may still be Amavasya.
+    day = retreatToMonthStart(Math.floor(day) + 2, dateInfoTemplate);
+
+    const monthStarts = new Array(13).fill(0);
+    monthStarts[0] = day;   // Chaitra
+
+    let hasAdhika    = false;
+    let adhikaIndex  = -1;
+    let adhikaStart  = 0;
+    let adhikaName   = '';
+
+    for (let month = 1; month <= 12; month++) {
+        day = advanceToMonthStart(day, dateInfoTemplate);
+        state = computePanchanga(day, makeDateInfoForDay(day, dateInfoTemplate));
+
+        if (!hasAdhika && isAdhikaMonth(day, state, dateInfoTemplate)) {
+            adhikaStart  = day;
+            adhikaName   = ADHIKA_NAMES[month];
+            hasAdhika    = true;
+            adhikaIndex  = month;
+            day = advanceToMonthStart(day, dateInfoTemplate);
+        }
+        monthStarts[month] = day;
+    }
+
+    // Detect kshaya month: a lunar month that contains no Amavasya at sunrise.
+    //
+    // Strategy: for each month, scan its integer calendar days [startInt, endInt-1]
+    // for any day where sunrise tithi = 29.  If none found, check the first day of
+    // the next month (endInt): if that day's sunrise tithi is 0 (Pratipada), then
+    // the Amavasya that ended the current month happened entirely between two
+    // sunrises — the month is kshaya.  (If endInt has tithi 29, the Amavasya is
+    // at the last sunrise of the current month, which is normal.)
+    const kshayaSunriseUT = 0.021;   // ~30 min UT ≈ 6:00 am IST
+    let kshayaIndex = -1;
+    let kshayaGapDay = -1;  // j2000 integer day that owns the between-sunrise Amavasya
+    for (let m = 1; m <= 11; m++) {
+        const startInt = Math.floor(monthStarts[m - 1]);
+        const endInt   = Math.floor(monthStarts[m]);
+        let foundInside = false;
+        for (let d = startInt; d < endInt; d++) {
+            const ds = computePanchanga(d + kshayaSunriseUT, makeDateInfoForDay(d + kshayaSunriseUT, dateInfoTemplate));
+            if (ds.thithiIndex === 29) { foundInside = true; break; }
+        }
+        if (!foundInside) {
+            // No sunrise Amavasya inside the month. Check if endInt has tithi 0:
+            // if so, the Amavasya was invisible at sunrise and the month is kshaya.
+            // The Amavasya fell entirely between the last sunrise of this month
+            // (endInt - 1) and the first sunrise of the next (endInt); it will be
+            // detected by the between-sunrise probe on calendar day endInt - 1.
+            const endDayState = computePanchanga(
+                endInt + kshayaSunriseUT,
+                makeDateInfoForDay(endInt + kshayaSunriseUT, dateInfoTemplate)
+            );
+            if (endDayState.thithiIndex === 0) {
+                kshayaIndex = m;
+                kshayaGapDay = endInt - 1;  // calendar day that owns the gap Amavasya
+                break;
+            }
+        }
+    }
+
+    return { monthStarts, hasAdhika, adhikaIndex, adhikaStart, adhikaName, kshayaIndex, kshayaGapDay };
+}
+
+/**
+ * Determine current Vedic lunar month from precomputed month starts.
+ * @param {number} sunriseTithiIndex  tithi index (0-29) at sunrise; pass -1 if unknown
+ * @param {number} kshayaIndex        1-based index of the kshaya month (-1 if none)
+ * @param {number} kshayaGapDay       j2000 integer day that owns the between-sunrise Amavasya (-1 if none)
+ * @returns {{monthIndex: number, isAdhika: boolean}}  monthIndex is 1-based
+ */
+function findCurrentMonth(j2000Day, monthStarts, hasAdhika, adhikaStart, sunriseTithiIndex, kshayaIndex, kshayaGapDay) {
+    let month = 12;   // default: Phalguna
+
+    // Use floor(monthStarts) so the new month begins on the calendar day that
+    // Padya first appears, regardless of the sub-day transition time.
+    for (let i = 0; i < 11; i++) {
+        const thisFloor = Math.floor(monthStarts[i]);
+        const nextFloor = Math.floor(monthStarts[i + 1]);
+        if (j2000Day >= thisFloor && j2000Day < nextFloor) {
+            month = i + 1;
+            break;
+        }
+    }
+
+    let isAdhika = false;
+    if (hasAdhika && j2000Day >= adhikaStart && (j2000Day - adhikaStart) < 29.0) {
+        isAdhika = true;
+    }
+
+    // Edge case A/B: Pratipada (tithi 0) begins after sunrise on the first
+    // calendar day of a new lunar month.  At sunrise the tithi is still
+    // Amavasya (29) — the closing tithi of the month that just ended.
+    //
+    // A) Preceded by a regular month (e.g. 2026: Jyeshta → Ashadha, Jul 14).
+    //    The Amavasya belongs to the regular preceding month.
+    //    Fix: step month back by 1 so the festival lookup uses the right month.
+    //
+    // B) Preceded by an adhika month (e.g. 2023: Adhika Shravana → Shravana,
+    //    Aug 16).  The Amavasya belongs to the adhika month, which suppresses
+    //    all non-vaideeka festivals.
+    //    Fix: set isAdhika = true.
+    //
+    // Detect: sunrise is Amavasya AND today is the first calendar day of the
+    // current month AND sunrise is before the fractional Pratipada transition.
+    if (sunriseTithiIndex === 29 && !isAdhika) {
+        const monthIdx0 = month - 1;   // 0-based index into monthStarts
+        if (monthIdx0 >= 0 && monthIdx0 <= 11) {
+            const monthStartFrac = monthStarts[monthIdx0];
+            if (monthStartFrac !== undefined &&
+                Math.floor(j2000Day) === Math.floor(monthStartFrac) &&
+                j2000Day < monthStartFrac) {
+                if (hasAdhika && adhikaStart !== undefined &&
+                    adhikaStart >= monthStartFrac - 32.0 &&
+                    adhikaStart < monthStartFrac) {
+                    // Sub-case B: adhika month immediately preceded this one
+                    // (adhika started within ~32 days before this month's start).
+                    isAdhika = true;
+                } else {
+                    // Sub-case A: regular month preceded this one.
+                    month = month - 1;
+                    if (month < 1) month = 12;
+                }
+            }
+        }
+    }
+
+    // Edge case C: kshaya month (e.g. Ashadha 2028).
+    // A lunar month that contains no Amavasya at sunrise is kshaya.  The
+    // Amavasya in the month immediately before the kshaya month is traditionally
+    // observed as the kshaya month's Amavasya.
+    // kshayaIndex (computed by findYearStart) is the 1-based index of the kshaya
+    // month; if today is Amavasya in month kshayaIndex-1, promote to kshayaIndex.
+    //
+    // Exception: if the kshaya month itself has a between-sunrise Amavasya
+    // (kshayaGapDay >= 0), that real Amavasya will be detected by the
+    // between-sunrise probe on kshayaGapDay.  In that case suppress the
+    // promotion here so the preceding month's Amavasya does not fire a
+    // duplicate festival earlier in the year.
+    if (sunriseTithiIndex === 29 && !isAdhika &&
+        kshayaIndex > 1 && month === kshayaIndex - 1 &&
+        kshayaGapDay < 0) {
+        month = kshayaIndex;
+    }
+
+    return { monthIndex: month, isAdhika };
+}
+
+// ---------------------------------------------------------------------------
+// Samvatsara (60-year cycle) year name
+// ---------------------------------------------------------------------------
+
+const SAMVATSARA_NAMES = [
+    'Prabhava',        'Vibhava',       'Shukla',          'Pramo-dhootha',
+    'Prajothpaththi',  'Aangirasa',     'Srimukha',        'Bhaava',
+    'Yuva',            'Dhathru',       'Eeshwara',        'Bahudhanya',
+    'Pramathi',        'Vikrama',       'Vishu',           'Chithrabhaanu',
+    'Swabhaanu',       'Thaarana',      'Paarthiva',       'Vyaya',
+    'Sarvajithu',      'Sarvadhaari',   'Virodhi',         'Vikruthi',
+    'Khara',           'Nandana',       'Vijaya',          'Jaya',
+    'Manmatha',        'Durmukhi',      'Hevilambi',       'Vilambi',
+    'Vikari',          'Shaarvari',     'Plava',           'Shubhakrithu',
+    'Shobhakrithu',    'Krodhi',        'Vishwavasu',      'Parabhava',
+    'Plavanga',        'Keelaka',       'Soumya',          'Saadhaarana',
+    'Virodhikrithu',   'Pareedhaavi',   'Pramaadheecha',   'Ananda',
+    'Rakshasa',        'Nala',          'Paingala',        'Kalayukthi',
+    'Sidhdharthi',     'Roudhri',       'Durmathi',        'Dhundubhi',
+    'Rudhirodhgaari',  'Rakthaakshi',   'Krodhana',        'Akshaya'
+];
+
+function samvatsaraName(year) {
+    let idx = (year - 1609 - 18) % 60;
+    if (idx < 0) idx += 60;
+    return SAMVATSARA_NAMES[idx];
+}
+
+/**
+ * Approximate Gregorian year from J2000 integer days.
+ * (Avoids the slow day-by-day loop of the C++ version.)
+ */
+function yearFromJ2000Days(days) {
+    // J2000.0 = Jan 1.5, 2000  → year 2000 is approximately days/365.25 + 2000
+    return Math.trunc(days / 365.25 + 2000);
+}
+
+// ---------------------------------------------------------------------------
+// Name lookup tables
+// ---------------------------------------------------------------------------
+
+const VARA_NAMES = [
+    'Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'
+];
+
+const TITHI_NAMES = [
+    'Padya',       'Bidige',      'Thadige',      'Chouthi',      'Panchami',
+    'Shrashti',    'Sapthami',    'Ashtami',      'Navami',       'Dashami',
+    'Ekadashi',    'Dwadashi',    'Thrayodashi',  'Chaturdashi',  'Poornime',
+    'Padya',       'Bidige',      'Thadige',      'Chouthi',      'Panchami',
+    'Shrashti',    'Sapthami',    'Ashtami',      'Navami',       'Dashami',
+    'Ekadashi',    'Dwadashi',    'Thrayodashi',  'Chaturdashi',  'Amavasya'
+];
+
+const NAKSHATRA_NAMES = [
+    '',
+    'Ashvini',      'Bharani',      'Kriththika',   'Rohini',
+    'Mrigashira',   'Aridra',       'Punarvasu',    'Pushya',
+    'Ashlesha',     'Makha',        'Pubba',        'Uttare',
+    'Hastha',       'Chitha',       'Swathi',       'Vishakha',
+    'Anuradha',     'Jyestha',      'Mula',         'Poorvashada',
+    'Uttarashada',  'Shravana',     'Dhanishtha',   'Shathabhisha',
+    'Poorvabhadra', 'Uttarabhadra', 'Revathi'
+];
+
+const YOGA_NAMES = [
+    'Vishkambha', 'Priti',    'Ayushman',  'Saubhagya', 'Shobhana',
+    'Atiganda',   'Sukarma',  'Dhriti',    'Shula',     'Ganda',
+    'Vriddhi',    'Dhruva',   'Vyaghata',  'Harshana',  'Vajra',
+    'Siddhi',     'Vyatipata','Variyana',  'Parigha',   'Shiva',
+    'Siddha',     'Sadhya',   'Shubha',    'Shukla',    'Brahma',
+    'Indra',      'Vaidhriti'
+];
+
+const KARANA_NAMES = [
+    'Kimstughna',   // 0 fixed
+    'Bava',         // 1 repeating
+    'Balava',       // 2
+    'Kaulava',      // 3
+    'Taitila',      // 4
+    'Garaja',       // 5
+    'Vanija',       // 6
+    'Vishti',       // 7 (Bhadra)
+    'Shakuni',      // 8 fixed
+    'Chatushpada',  // 9 fixed
+    'Naga'          // 10 fixed
+];
+
+const RASHI_NAMES = [
+    'Mesha',     'Vrushabha', 'Mithuna',   'Karkataka',
+    'Simha',     'Kanya',     'Tula',      'Vrushchika',
+    'Dhanur',    'Makara',    'Khumbha',   'Meena'
+];
+
+const RASHI_FULL_NAMES = [
+    'Mesha',     'Vrushabha', 'Mithuna',   'Karkataka',
+    'Simha',     'Kanya',     'Thula',     'Vrushchika',
+    'Dhanus',    'Makara',    'Kumbha',    'Meena'
+];
+
+const LUNAR_MONTH_NAMES = [
+    '',
+    'Chaitra',   'Vaishakha', 'Jyeshta',    'Ashadha',
+    'Shravana',  'Bhadrapada','Ashvayuja',  'Karthika',
+    'Margashira','Pushya',    'Magha',      'Palguna'
+];
+
+const SOURA_MONTH_NAMES = [
+    '',
+    'Mesha',     'Vrushabha', 'Mithuna',   'Karkataka',
+    'Simha',     'Kanya',     'Tula',      'Vrushchika',
+    'Dhanus',    'Makara',    'Khumbha',   'Meena'
+];
+
+// ---------------------------------------------------------------------------
+// Festival table
+// ---------------------------------------------------------------------------
+
+const FESTIVAL_NAMES = {
+    1:  'Ugadi',
+    2:  'Rama Navami',
+    3:  'Arakalagudu Vasanthalakshmi vaideeka',
+    4:  'Bengaluru Karaga - Chitra Poornime',
+    5:  'Shankara Jayanthi',
+    6:  'Narasimha Jayanthi',
+    7:  'Prathama Ekadashi',
+    8:  'Jyothirbheemeshvara Vratha, Bheemana Amavasya',
+    9:  'Nagara Panchami',
+    10: 'Siriyala Shrashti',
+    11: 'Raksha bandhana, Yajur Upakarma',
+    12: 'Sri Krishna Janmashtami',
+    13: 'Swarna Gouri Vratha',
+    14: 'VaraSidhdhiVinayaka Vratha',
+    15: 'Rushi Panchami',
+    16: 'Arakalagudu Nanjundayyanavara Vaideeka',
+    17: 'Anantha Padmanabha Vratha',
+    19: 'Mahalaya Amavasya',
+    20: 'Sharannavaratre Aarambha, Navaratre Padya',
+    21: 'Durga Ashtami',
+    22: 'Maha Navami',
+    23: 'Vijaya Dashami',
+    24: 'Deepavali - Neerutumbuva Habba',
+    25: 'Deepavali - Naraka Chaturdashi',
+    26: 'Deepavali - Dhana Lakshmi Pooja',
+    27: 'Deepavali - Balipadyami, Baleendra pooja',
+    28: 'Chikka Deepavali - Uththaana Dwaadashi',
+    29: 'Laksha Deepa Amavasya',
+    30: 'Subhramanya Shrashti',
+    31: 'Vaikunta Ekadashi',
+    32: 'Ratha Sapthami, Ekkadele snaana',
+    33: 'Maha Shivaraathri',
+    34: 'Arakalagudu Amrutheshvaraswami Rathothsava',
+    35: 'Holi habba, Arakalagudu Lakshminarasimhaswami Rathothsava',
+    36: 'RaviPrakashaMurthy Vaidika',
+    37: 'Sarojammanavara Vaidika'
+};
+
+// Festival map: key = month * 30 + thithi + 1, value = festival code
+const FESTIVAL_MAP = {
+    1:   1,   // Ugadi           (month 0, tithi 0)
+    9:   2,   // Rama Navami
+    14:  3,   // Arakalagudu Vasanthalakshmi vaideeka
+    15:  4,   // Karaga
+    35:  5,   // Shankara Jayanthi
+    44:  6,   // Narasimha Jayanthi
+    101: 7,   // Prathama Ekadashi
+    120: 8,   // Bheemana Amavasya
+    125: 9,   // Nagara Panchami
+    126: 10,  // Siriyala Shrashti
+    135: 11,  // Rakshabhandhana
+    143: 12,  // Janmashtami
+    153: 13,  // Gauri Vratha
+    154: 14,  // Vinayaka Vratha
+    155: 15,  // Rushi Panchami
+    157: 16,  // Vaideeka
+    164: 17,  // Anantha
+    180: 19,  // Mahalaya
+    181: 20,  // Navaratre Padya
+    188: 21,  // Durgashtami
+    189: 22,  // Maha Navami
+    190: 23,  // Vijaya Dashami
+    208: 24,  // Deepavali 1
+    209: 25,  // Deepavali 2
+    210: 26,  // Deepavali 3
+    211: 27,  // Deepavali 4
+    222: 28,  // Chikka Deepavali
+    226: 36,  // PrakashaVaidika
+    240: 29,  // Laksha Deepa
+    245: 30,  // Subhramanya Shrashti
+    250: 37,  // SarojammaVaidika
+    251: 31,  // Vaikunta Ekadashi (Margashira Shukla Ekadashi — Dhanurmasa case)
+    281: 31,  // Vaikunta Ekadashi (Pushya Shukla Ekadashi — usual case)
+    311: 31,  // Vaikunta Ekadashi (Magha Shukla Ekadashi — rare Makara Sankranthi overlap)
+    307: 32,  // Ratha Sapthami
+    329: 33,  // Maha Shivaraathri
+    330: 34,  // Arakalagudu1
+    345: 35,  // Holi habba
+};
+
+function lookupFestival(festMonth, festThithi) {
+    const key = festMonth * 30 + festThithi + 1;
+    const code = FESTIVAL_MAP[key];
+    return code ? FESTIVAL_NAMES[code] : null;
+}
+
+/**
+ * Detect special rule-based festivals.
+ * @param {object} state  computePanchanga result
+ * @param {number} festMonth   0-based lunar month index
+ * @returns {string|null}
+ */
+function detectSpecialFestival(state, festMonth) {
+    // Varamahalakshmi: Friday (vara 5) in Shravana month (festmonth 4), tithi 7-14
+    if (state.thithiIndex >= 7 && state.thithiIndex < 15
+        && state.varaIndex === 5 && festMonth === 4) {
+        return 'Varamahalakshmi shukravara';
+    }
+    // Rugveda Upakarma: Shravana nakshatra (22) in Shravana month (4)
+    if (state.nakIndex === 22 && festMonth === 4) {
+        return 'Rugveda Upakarma';
+    }
+    // Navarathri Saraswathi Pooja: Jyeshta nakshatra (18) in Ashvayuja (6)
+    if (festMonth === 6 && state.nakIndex === 18) {
+        return 'Navarathri Saraswathi Pooja';
+    }
+    // Makara Sankranthi: Sun sidereal lon ≈ 270°
+    const sunSidereal = mod360(state.sunSiderealLon - state.ayanamsha);
+    if (sunSidereal > 270.0 && sunSidereal < 271.0) {
+        return 'Makara Sankranthi';
+    }
+    return null;
+}
+
+// ---------------------------------------------------------------------------
+// Main public API: computeFullPanchanga
+// ---------------------------------------------------------------------------
+
+/**
+ * Compute the complete Panchanga for a given date, time and location.
+ *
+ * @param {object} params
+ *   {number} day, month, year
+ *   {number} localHour, localMin  (24h IST)
+ *   {boolean} useSunrise          if true, compute at sunrise instead
+ *   {number} longitude, latitude  observer position (degrees)
+ *   {number} tzHr, tzMin         timezone offset
+ *
+ * @returns {object}  Complete Panchanga result with all fields
+ */
+function computeFullPanchanga(params) {
+    const {
+        day, month, year,
+        localHour = 13, localMin = 0,
+        useSunrise = false,
+        longitude = DEFAULT_LONGITUDE,
+        latitude  = DEFAULT_LATITUDE,
+        tzHr      = DEFAULT_TZ_HR,
+        tzMin     = DEFAULT_TZ_MIN
+    } = params;
+
+    // Build initial DateInfo
+    const dateInfo = buildDateInfo(day, month, year, localHour, localMin,
+                                   longitude, latitude, tzHr, tzMin);
+
+    // Compute sunrise using the integer day
+    const { sunriseIST, sunsetIST } = computeSunrise(dateInfo.j2000DaysInt, dateInfo);
+
+    // Determine which J2000 day to use
+    let queryDay = dateInfo.j2000Day;
+    if (useSunrise) {
+        queryDay = dateInfo.j2000DaysInt + (sunriseIST - 5.5) / 24.0;
+    }
+
+    // Compute Panchanga at query time
+    const dateInfoQuery = Object.assign({}, dateInfo, {
+        j2000Day: queryDay,
+        utHours: dateInfo.utHours   // use original UT
+    });
+    // Recalculate utHours for sunrise mode
+    if (useSunrise) {
+        dateInfoQuery.utHours = sunriseIST - 5.5;  // convert IST to UT
+    }
+
+    let state = computePanchanga(queryDay, dateInfoQuery);
+
+    // Always compute a sunrise-based state for festival tithi/nakshatra lookup.
+    // Festivals (except vaideeka observances) are traditionally determined by
+    // the tithi at sunrise, not at an arbitrary query time.  This prevents the
+    // same festival firing on two consecutive calendar days simply because a
+    // long tithi straddles midnight.
+    const sunriseJ2000   = dateInfo.j2000DaysInt + (sunriseIST - 5.5) / 24.0;
+    const sunriseDateInfo = Object.assign({}, dateInfo, {
+        j2000Day: sunriseJ2000,
+        utHours:  sunriseIST - 5.5
+    });
+    const sunriseState = computePanchanga(sunriseJ2000, sunriseDateInfo);
+
+    const thithiRemPct    = (1.0 - (state.thithiFrac - state.thithiIndex)) * 100.0;
+    const nakRemPct       = (1.0 - (state.nakFrac - Math.trunc(state.nakFrac))) * 100.0;
+
+    // Planet positions
+    const planets = computePlanetRAs(queryDay, state);
+    const rahuLon = state.rahuLon;
+    const kethuLon = mod360(rahuLon + 180.0);
+
+    // Paksha
+    const paksha = state.thithiIndex < 15 ? 'Shukla' : 'Krishna';
+
+    // Soura (solar) month
+    const souraMonthFrac  = mod360(state.sunSiderealLon - state.ayanamsha) / 30.0;
+    const souraMonthIndex = Math.trunc(souraMonthFrac);            // 0-based
+    const souraCeil       = souraMonthIndex + 1;                   // 1-based for lagna
+    const souraTithi      = Math.trunc((souraMonthFrac - souraMonthIndex) * 30 + 1);
+    const displaySouraTithi = Math.trunc((souraMonthFrac - souraMonthIndex) * 30 + 1.5);
+
+    // Lagna and Navamsha (RAMC-based astronomical ascendant)
+    const lagnaRashi  = computeLagnaFromRAMC(state.lst, state.obliquity,
+                                             dateInfo.latitude, state.ayanamsha);
+    const navamshaIdx = computeNavamshaLagnaFromRAMC(state.lst, state.obliquity,
+                                                     dateInfo.latitude, state.ayanamsha);
+
+    // Year start and Samvatsara
+    const yearStartResult = findYearStart(queryDay, dateInfo);
+    const newYear = yearFromJ2000Days(Math.trunc(yearStartResult.monthStarts[0]));
+    const yearName = samvatsaraName(newYear);
+
+    // Current month: determined by the tithi at sunrise (canonical for festival
+    // assignment), not by the arbitrary query time.
+    const { monthIndex, isAdhika } = findCurrentMonth(
+        sunriseJ2000,
+        yearStartResult.monthStarts,
+        yearStartResult.hasAdhika,
+        yearStartResult.adhikaStart,
+        sunriseState.thithiIndex,
+        yearStartResult.kshayaIndex,
+        yearStartResult.kshayaGapDay
+    );
+
+    // Re-run at original time to get fest-time state
+    const origState = computePanchanga(dateInfo.j2000Day, dateInfo);
+    state = origState;
+
+    // Festival lookup.
+    // For non-vaideeka festivals, the tithi at sunrise is canonical: it
+    // prevents a long tithi from matching on two consecutive calendar days.
+    // However some festivals (Janmashtami, Maha Shivaratri) have their tithi
+    // begin after sunrise, so the sunrise tithi won't match. In that case we
+    // fall back to the query-time tithi so those festivals are not lost.
+    // Vaideeka observances always use the query-time tithi unchanged.
+    const festMonth = monthIndex - 1;  // 0-based
+
+    const isVaideeka = (name) => name && (name.toLowerCase().includes('vaideeka') || name.toLowerCase().includes('vaidika'));
+
+    const tblAtSunrise = lookupFestival(festMonth, sunriseState.thithiIndex);
+    const tblAtQuery   = lookupFestival(festMonth, state.thithiIndex);
+
+    // For two-sunrise dedup and between-sunrise detection:
+    // compute tomorrow's approximate sunrise tithi (sunriseJ2000 + 1 day).
+    const nextSunriseJ2000b = sunriseJ2000 + 1.0;
+    const nextSunriseInfob  = Object.assign({}, dateInfo, {
+        j2000Day:     nextSunriseJ2000b,
+        j2000DaysInt: Math.floor(nextSunriseJ2000b),
+        utHours:      (nextSunriseJ2000b - Math.floor(nextSunriseJ2000b)) * 24.0
+    });
+    const nextSunriseStateb = computePanchanga(nextSunriseJ2000b, nextSunriseInfob);
+    // True when tomorrow's sunrise has the same tithi → today is the first of
+    // two consecutive sunrise days for this tithi → suppress today, fire tomorrow.
+    const isTithiDupFirst = (nextSunriseStateb.thithiIndex === sunriseState.thithiIndex);
+
+    // Number of tithi steps from today's sunrise to tomorrow's (mod 30).
+    // When this is ≥ 2, at least one tithi was skipped — it started and ended
+    // entirely between the two sunrises and needs a probe to detect.
+    const nextTithiIdx  = nextSunriseStateb.thithiIndex;
+    const todayTithiIdx = sunriseState.thithiIndex;
+    const tithiStep     = (nextTithiIdx - todayTithiIdx + 30) % 30;
+
+    // Lunar month at tomorrow's sunrise — used by the between-sunrise probe to
+    // correctly assign a between-sunrise Padya (tithi 0) to the incoming month.
+    const { monthIndex: nextMonthIndex } = findCurrentMonth(
+        nextSunriseJ2000b,
+        yearStartResult.monthStarts,
+        yearStartResult.hasAdhika,
+        yearStartResult.adhikaStart,
+        nextSunriseStateb.thithiIndex,
+        yearStartResult.kshayaIndex,
+        yearStartResult.kshayaGapDay
+    );
+    const nextFestMonth = nextMonthIndex - 1;
+
+    // For vaideeka festivals: always evaluate thithi at 3:30 PM IST (15:30 IST = 10:00 UT).
+    // Rules:
+    //   1. If the vaideeka thithi is present at 3:30 PM today → use today
+    //      (covers both the single-day case and the first of two consecutive days).
+    //   2. If the vaideeka thithi starts after 3:30 PM today (not present at 3:30 today
+    //      but present at 3:30 tomorrow) → use tomorrow (suppress today, fire tomorrow).
+    const kPm330UT = 10.0;  // 15:30 IST = 10:00 UT
+    const pm330J2000Yesterday = dateInfo.j2000DaysInt - 1.0 + kPm330UT / 24.0;
+    const pm330J2000Today    = dateInfo.j2000DaysInt + kPm330UT / 24.0;
+    const pm330J2000Tomorrow = dateInfo.j2000DaysInt + 1.0 + kPm330UT / 24.0;
+
+    const pm330InfoYesterday = Object.assign({}, dateInfo, {
+        j2000Day:     pm330J2000Yesterday,
+        j2000DaysInt: dateInfo.j2000DaysInt - 1,
+        utHours:      kPm330UT
+    });
+    const pm330InfoToday = Object.assign({}, dateInfo, {
+        j2000Day: pm330J2000Today,
+        utHours:  kPm330UT
+    });
+    const pm330InfoTomorrow = Object.assign({}, dateInfo, {
+        j2000Day:     pm330J2000Tomorrow,
+        j2000DaysInt: dateInfo.j2000DaysInt + 1,
+        utHours:      kPm330UT
+    });
+    const pm330StateYesterday = computePanchanga(pm330J2000Yesterday, pm330InfoYesterday);
+    const pm330StateToday    = computePanchanga(pm330J2000Today,    pm330InfoToday);
+    const pm330StateTomorrow = computePanchanga(pm330J2000Tomorrow, pm330InfoTomorrow);
+
+    const tblAtPm330Yesterday = lookupFestival(festMonth, pm330StateYesterday.thithiIndex);
+    const tblAtPm330Today    = lookupFestival(festMonth, pm330StateToday.thithiIndex);
+    const tblAtPm330Tomorrow = lookupFestival(festMonth, pm330StateTomorrow.thithiIndex);
+
+    // Collect all non-vaideeka tbl festivals that fire today into an array.
+    // Multiple festivals can occur on the same day when, e.g., one tithi is
+    // entirely between two sunrises (kshaya tithi) while a different tithi is
+    // present at sunrise — both belong to today's calendar date.
+    const tblFestivals = [];
+    let tblFestival;   // single vaideeka result (at most one)
+    if (isVaideeka(tblAtPm330Today) && !isVaideeka(tblAtPm330Tomorrow)) {
+        // Vaideeka thithi is present at 3:30 PM today but not tomorrow → fire today.
+        tblFestival = tblAtPm330Today;
+    } else if (isVaideeka(tblAtPm330Today) && isVaideeka(tblAtPm330Tomorrow)
+               && tblAtPm330Today === tblAtPm330Tomorrow) {
+        // Same vaideeka thithi spans 3:30 PM on both days → suppress today, fire tomorrow.
+        tblFestival = null;
+    } else if (isVaideeka(tblAtPm330Tomorrow) && !isVaideeka(tblAtPm330Today)
+               && !tblAtSunrise) {
+        // Vaideeka thithi starts after 3:30 PM today (no non-vaideeka at sunrise) →
+        // fire tomorrow (suppress today).
+        tblFestival = null;
+    } else {
+        // Fallback: vaideeka thithi absent at both 3:30 PMs (tithi started after
+        // today's 3:30 PM and ended before tomorrow's 3:30 PM).  If it is present
+        // at today's sunrise, fire today — unless tomorrow's sunrise has it too
+        // (prefer the later day), or yesterday's 3:30 PM already had it (meaning
+        // the festival already fired yesterday via rule 1).
+        if (isVaideeka(tblAtSunrise) && !isTithiDupFirst
+                && !isVaideeka(tblAtPm330Yesterday)) {
+            tblFestival = tblAtSunrise;
+        } else {
+            tblFestival = null;
+        }
+
+        if (tblAtSunrise && !isVaideeka(tblAtSunrise)) {
+            // Non-vaideeka: tithi is present at today's sunrise.
+            // Suppress today if tomorrow's sunrise also has it (second day is preferred).
+            // Also suppress if the same festival fires ~29-31 days later in the SAME
+            // lunar month (double-cycle month scenario, e.g. 2030 where Magha spans
+            // two full new-moon cycles): prefer the later occurrence.
+            // Use findYearStart for the forward date to get its correct year context,
+            // ensuring findCurrentMonth returns the right lunar month for that date.
+            // Guard: the lookahead must stay within the current year's monthStarts[12]
+            // boundary to avoid false positives when the year rolls over.
+            // Exception: Vaikunta Ekadashi (code 31) has its own dedicated guard block
+            // that handles all deduplication scenarios; skip isMonthDupFirst for it.
+            let isMonthDupFirst = false;
+            if (tblAtSunrise !== FESTIVAL_NAMES[31]) {
+            const yearEndBoundary = yearStartResult.monthStarts[12] ?? Infinity;
+            const nextCycleJ2000 = sunriseJ2000 + 29.0;
+            if (nextCycleJ2000 < yearEndBoundary) {
+                const nextCycleYSR = findYearStart(nextCycleJ2000, dateInfo);
+                // Scan ±2 days around +29 to handle tithi timing uncertainty
+                for (let offset = 27; offset <= 32; offset++) {
+                    const tryJ2000 = sunriseJ2000 + offset;
+                    if (tryJ2000 >= yearEndBoundary) break;
+                    const tryInfo = Object.assign({}, dateInfo, {
+                        j2000Day: tryJ2000,
+                        utHours:  (tryJ2000 - Math.floor(tryJ2000)) * 24.0
+                    });
+                    const tryState = computePanchanga(tryJ2000, tryInfo);
+                    const { monthIndex: tryMonthIndex, isAdhika: tryIsAdhika } = findCurrentMonth(
+                        tryJ2000,
+                        nextCycleYSR.monthStarts,
+                        nextCycleYSR.hasAdhika,
+                        nextCycleYSR.adhikaStart,
+                        tryState.thithiIndex,
+                        nextCycleYSR.kshayaIndex,
+                        nextCycleYSR.kshayaGapDay
+                    );
+                    // Skip adhika months: non-vaideeka festivals don't fire there
+                    if (tryIsAdhika) continue;
+                    const tryFestMonth = tryMonthIndex - 1;
+                    const tblAtTry = lookupFestival(tryFestMonth, tryState.thithiIndex);
+                    if (tblAtTry === tblAtSunrise && tryFestMonth === festMonth) {
+                        isMonthDupFirst = true;
+                        break;
+                    }
+                }
+            }
+            } // end if (tblAtSunrise !== 31)
+
+            if (!isTithiDupFirst && !isMonthDupFirst) tblFestivals.push(tblAtSunrise);
+        }
+
+        // Also check for a festival whose tithi falls entirely between today's
+        // sunrise and tomorrow's sunrise (a different tithi from the one at
+        // sunrise).  This allows two festivals to coincide on the same date.
+        //
+        // Strategy: if tomorrow's sunrise tithi is TWO (or more) steps ahead of
+        // today's, then at least one tithi was entirely skipped — it started and
+        // ended between the two sunrises.  Probe at midpoint and ¾-point between
+        // the two sunrises to find which tithi was active in that window.
+        //
+        // Month note: a between-sunrise Padya (tithi 0) marks the start of a new
+        // lunar month.  Use tomorrow's festMonth for the lookup in that case,
+        // because Padya belongs to the incoming month, not the current one.
+        if (tithiStep >= 2) {
+            // At least one tithi fits entirely between the two sunrises.
+            // Probe at midpoint and ¾-point to find it.
+            for (const frac of [0.5, 0.75]) {
+                const probeJ   = sunriseJ2000 + frac * (nextSunriseJ2000b - sunriseJ2000);
+                const probeInfo = Object.assign({}, dateInfo, {
+                    j2000Day: probeJ,
+                    utHours:  (probeJ - Math.floor(probeJ)) * 24.0
+                });
+                const probeState = computePanchanga(probeJ, probeInfo);
+                const probeFestMonth = probeState.thithiIndex === 0 ? nextFestMonth : festMonth;
+                const tblAtProbe = lookupFestival(probeFestMonth, probeState.thithiIndex);
+                if (tblAtProbe && !isVaideeka(tblAtProbe)
+                        && tblAtProbe !== tblAtSunrise
+                        && !tblFestivals.includes(tblAtProbe)) {
+                    // Confirm it doesn't reach tomorrow's sunrise.
+                    const nextTbl = lookupFestival(nextFestMonth, nextTithiIdx);
+                    if (nextTbl !== tblAtProbe) tblFestivals.push(tblAtProbe);
+                }
+            }
+        }
+    }
+
+    const specAtSunrise = detectSpecialFestival(sunriseState, festMonth);
+    const specAtQuery   = detectSpecialFestival(state, festMonth);
+
+    const specAtPm330Yesterday = detectSpecialFestival(pm330StateYesterday, festMonth);
+    const specAtPm330Today    = detectSpecialFestival(pm330StateToday,    festMonth);
+    const specAtPm330Tomorrow = detectSpecialFestival(pm330StateTomorrow, festMonth);
+
+    const specFestivals = [];
+    let specFestival;   // single vaideeka result (at most one)
+    if (isVaideeka(specAtPm330Today) && !isVaideeka(specAtPm330Tomorrow)) {
+        // Vaideeka special festival present at 3:30 PM today but not tomorrow → fire today.
+        specFestival = specAtPm330Today;
+    } else if (isVaideeka(specAtPm330Today) && isVaideeka(specAtPm330Tomorrow)
+               && specAtPm330Today === specAtPm330Tomorrow) {
+        // Same vaideeka special festival spans 3:30 PM on both days → suppress today, fire tomorrow.
+        specFestival = null;
+    } else if (isVaideeka(specAtPm330Tomorrow) && !isVaideeka(specAtPm330Today)
+               && !specAtSunrise) {
+        // Vaideeka special festival starts after 3:30 PM today (no non-vaideeka at sunrise) →
+        // suppress today, fire tomorrow.
+        specFestival = null;
+    } else {
+        // Fallback: vaideeka thithi absent at both 3:30 PMs.  If it is present at
+        // today's sunrise, fire today — unless tomorrow's sunrise has it too, or
+        // yesterday's 3:30 PM already had it.
+        if (isVaideeka(specAtSunrise) && !isTithiDupFirst
+                && !isVaideeka(specAtPm330Yesterday)) {
+            specFestival = specAtSunrise;
+        } else {
+            specFestival = null;
+        }
+
+        if (specAtPm330Today && !isVaideeka(specAtPm330Today) && !specAtSunrise
+                && specAtPm330Today !== specAtPm330Yesterday) {
+            // Non-vaideeka special festival: nakshatra/condition starts after sunrise
+            // but is present at 3:30 PM today.  Fire today if:
+            //   - it wasn't already present at yesterday's 3:30 PM (already fired), and
+            //   - tomorrow's sunrise won't also have it (prefer the later day), and
+            //   - it doesn't persist to tomorrow's 3:30 PM (fire tomorrow instead), and
+            //   - the same weekday-based festival doesn't fire again 7 days later
+            //     at sunrise (prefer the later occurrence, as in the specAtSunrise branch).
+            const specAtNextSunrise = detectSpecialFestival(nextSunriseStateb, nextFestMonth);
+            let isWeekdayDupFirstPm = false;
+            const nextWeekSrJ2000pm = sunriseJ2000 + 7.0;
+            const nextWeekSrInfopm  = Object.assign({}, dateInfo, {
+                j2000Day:     nextWeekSrJ2000pm,
+                j2000DaysInt: Math.floor(nextWeekSrJ2000pm),
+                utHours:      (nextWeekSrJ2000pm - Math.floor(nextWeekSrJ2000pm)) * 24.0
+            });
+            const nextWeekSrStatepm = computePanchanga(nextWeekSrJ2000pm, nextWeekSrInfopm);
+            const { monthIndex: nwMonthIdxPm } = findCurrentMonth(
+                nextWeekSrJ2000pm,
+                yearStartResult.monthStarts, yearStartResult.hasAdhika,
+                yearStartResult.adhikaStart, nextWeekSrStatepm.thithiIndex,
+                yearStartResult.kshayaIndex, yearStartResult.kshayaGapDay
+            );
+            const specAtNextWeekPm = detectSpecialFestival(nextWeekSrStatepm, nwMonthIdxPm - 1);
+            if (specAtNextWeekPm === specAtPm330Today) isWeekdayDupFirstPm = true;
+            // For nakshatra-based festivals (e.g. Rugveda Upakarma): also suppress
+            // if the next sunrise independently satisfies the same nakshatra condition,
+            // even when detectSpecialFestival returns a different festival there (because
+            // another condition — e.g. Varamahalakshmi — is checked first in the chain).
+            // Specifically: if specAtPm330Today is Rugveda Upakarma and tomorrow's sunrise
+            // has Shravana nakshatra in Shravana month, suppress today.
+            const rugvedaName = 'Rugveda Upakarma';
+            const nextSrAlsoHasRugveda = (specAtPm330Today === rugvedaName)
+                && (nextSunriseStateb.nakIndex === 22 && nextFestMonth === 4);
+            if (!isWeekdayDupFirstPm && !nextSrAlsoHasRugveda
+                    && specAtNextSunrise !== specAtPm330Today
+                    && specAtPm330Today !== specAtPm330Tomorrow) {
+                specFestivals.push(specAtPm330Today);
+            }
+        }
+
+        if (specAtSunrise && !isVaideeka(specAtSunrise)) {
+            // Non-vaideeka: nakshatra/condition present at today's sunrise.
+            // If tomorrow's sunrise also has it, suppress today (second day is preferred).
+            // Additionally, for weekday-based festivals (e.g. Varamahalakshmi on Friday),
+            // if the same festival fires again 7 days later (same weekday, still valid),
+            // suppress today in favour of the later occurrence.
+            let isWeekdayDupFirst = false;
+            const nextWeekSunriseJ2000 = sunriseJ2000 + 7.0;
+            const nextWeekSunriseInfo  = Object.assign({}, dateInfo, {
+                j2000Day: nextWeekSunriseJ2000,
+                utHours:  (nextWeekSunriseJ2000 - Math.floor(nextWeekSunriseJ2000)) * 24.0
+            });
+            const nextWeekSunriseState = computePanchanga(nextWeekSunriseJ2000, nextWeekSunriseInfo);
+            const { monthIndex: nextWeekMonthIndex } = findCurrentMonth(
+                nextWeekSunriseJ2000,
+                yearStartResult.monthStarts,
+                yearStartResult.hasAdhika,
+                yearStartResult.adhikaStart,
+                nextWeekSunriseState.thithiIndex,
+                yearStartResult.kshayaIndex,
+                yearStartResult.kshayaGapDay
+            );
+            const nextWeekFestMonth = nextWeekMonthIndex - 1;
+            const specAtNextWeek = detectSpecialFestival(nextWeekSunriseState, nextWeekFestMonth);
+            if (specAtNextWeek === specAtSunrise) isWeekdayDupFirst = true;
+
+            // For weekday-based special festivals (e.g. Varamahalakshmi on Friday),
+            // isTithiDupFirst is a false positive when tomorrow is a different weekday:
+            // the tithi spans two sunrises but the festival condition (Friday) does not.
+            // Override: treat today's tithi-dup suppression as irrelevant if tomorrow's
+            // sunrise would not also fire this same special festival.
+            const specAtTomorrow = detectSpecialFestival(nextSunriseStateb, nextFestMonth);
+            const effectiveTithiDupFirst = isTithiDupFirst && (specAtTomorrow === specAtSunrise);
+
+            if (!effectiveTithiDupFirst && !isWeekdayDupFirst) specFestivals.push(specAtSunrise);
+        }
+
+        // Probe for a special festival in the between-sunrise window (same
+        // tithiStep logic as tbl above).
+        if (tithiStep >= 2) {
+            for (const frac of [0.5, 0.75]) {
+                const probeJ    = sunriseJ2000 + frac * (nextSunriseJ2000b - sunriseJ2000);
+                const probeInfo = Object.assign({}, dateInfo, {
+                    j2000Day: probeJ,
+                    utHours:  (probeJ - Math.floor(probeJ)) * 24.0
+                });
+                const probeState  = computePanchanga(probeJ, probeInfo);
+                const probeFestMonth = probeState.thithiIndex === 0 ? nextFestMonth : festMonth;
+                const specAtProbe = detectSpecialFestival(probeState, probeFestMonth);
+                if (specAtProbe && !isVaideeka(specAtProbe)
+                        && specAtProbe !== specAtSunrise
+                        && !specFestivals.includes(specAtProbe)) {
+                    const nextSpec = detectSpecialFestival(nextSunriseStateb, nextFestMonth);
+                    if (nextSpec !== specAtProbe) specFestivals.push(specAtProbe);
+                }
+            }
+        }
+    }
+
+    // -----------------------------------------------------------------------
+    // Supplementary: Rugveda Upakarma can coincide with Varamahalakshmi on the
+    // same Friday in Shravana when the nakshatra happens to be Shravana.
+    // detectSpecialFestival returns only one festival at a time; if Varamahalakshmi
+    // was returned, Rugveda Upakarma would be silently dropped.  Check explicitly
+    // here: if today (at sunrise) has Shravana nakshatra in Shravana month and
+    // Rugveda Upakarma is not already in specFestivals, fire it today.
+    // Apply the same isTithiDupFirst-override logic as for Varamahalakshmi.
+    const rugvedaName = 'Rugveda Upakarma';
+    if (sunriseState.nakIndex === 22 && festMonth === 4
+            && !specFestivals.includes(rugvedaName)
+            && specAtSunrise !== rugvedaName) {
+        const nextRugveda = (nextSunriseStateb.nakIndex === 22 && nextFestMonth === 4);
+        const rugvedaTomorrow = nextRugveda ? rugvedaName : null;
+        const rugvedaEffectiveTithiDup = isTithiDupFirst && (rugvedaTomorrow === rugvedaName);
+        if (!rugvedaEffectiveTithiDup) {
+            specFestivals.push(rugvedaName);
+        }
+    }
+
+    // Merge all festival names from both tbl and spec sources.
+    // tblFestival / specFestival carry vaideeka results (single string or null).
+    // tblFestivals / specFestivals carry non-vaideeka results (arrays).
+    const allFestivals = [];
+    if (tblFestival) allFestivals.push(tblFestival);
+    for (const f of tblFestivals) allFestivals.push(f);
+    if (specFestival) allFestivals.push(specFestival);
+    for (const f of specFestivals) allFestivals.push(f);
+
+    // De-duplicate (same name can't appear twice).
+    const festivalRawArr = [...new Set(allFestivals)];
+    let festivalRaw = festivalRawArr.length > 0 ? festivalRawArr : null;
+
+    // -----------------------------------------------------------------------
+    // Vaikunta Ekadashi (code 31) deduplication guards.
+    //
+    // The festival can fire from three map entries:
+    //   key 251 — festMonth 8 (Margashira) Shukla Ekadashi  (Dhanurmasa case)
+    //   key 281 — festMonth 9 (Pushya)     Shukla Ekadashi  (usual case)
+    //   key 311 — festMonth 10 (Magha)     Shukla Ekadashi  (rare overlap:
+    //             Makara Sankranthi and Ekadashi start on the same day, so the
+    //             Ekadashi began during Dhanurmasa but sunrise falls in Makara)
+    //
+    // Guard A (key 251 — Margashira):
+    //   Only fire when the sun is sidereal in Dhanus (240°–270°), i.e. truly
+    //   within Dhanurmasa.  Also suppress if a Pushya Ekadashi (key 281) will
+    //   fire within the next 29 days — that means the upcoming Pushya month
+    //   has its own Ekadashi, which is the preferred date.
+    //
+    // Guard B (key 281 or 251 — January case):
+    //   A rare calendar anomaly can place two separate Dhanurmasa Ekadashis
+    //   in the same Gregorian year (one in January, one in December).
+    //   When the current date is in January AND the sun sidereal is still in
+    //   Dhanus (or was in Dhanus yesterday for festMonth 9), suppress this
+    //   date if December of the same Gregorian year also produces a Vaikunta
+    //   Ekadashi in Margashira or Pushya with sun in Dhanus.
+    //   The December date is preferred.
+    //
+    // Guard C (key 311 — Magha):
+    //   Only fire when yesterday's sun was in Dhanus (i.e. Makara Sankranthi
+    //   occurred on the same day the Ekadashi began — an extremely rare case).
+    //   Also suppress if there is a Vaikunta in December of the same year.
+    // -----------------------------------------------------------------------
+    if (festivalRaw && festivalRaw.includes(FESTIVAL_NAMES[31])) {
+        const sunSidForVE = mod360(sunriseState.sunSiderealLon - sunriseState.ayanamsha);
+        const inDhanusVE  = sunSidForVE >= 240.0 && sunSidForVE < 270.0;
+
+        let suppressVE = false;
+        if (festMonth === 8) {
+            // Guard A: Margashira Ekadashi — require Dhanurmasa sun position.
+            if (!inDhanusVE) {
+                suppressVE = true;
+            } else {
+                // Also suppress if a Pushya Shukla Ekadashi fires within 29 days,
+                // but only if that Ekadashi falls in the same Gregorian year.
+                // (When the Margashira EK is in December, any Pushya EK within
+                // 29 days falls in January of the next year and should not cause
+                // suppression — the December date is the canonical VE for this year.)
+                let hasUpcomingPushyaEK = false;
+                const endOfYearJ = dateInfo.j2000DaysInt + (32 - day); // approx Dec 31
+                for (let offset = 1; offset <= 29 && !hasUpcomingPushyaEK; offset++) {
+                    const futJ    = sunriseJ2000 + offset;
+                    // Skip if this future day is outside the current Gregorian year.
+                    if (month === 12 && futJ > endOfYearJ) break;
+                    const futInfo = makeDateInfoForDay(futJ, dateInfo);
+                    const futSt   = computePanchanga(futJ, futInfo);
+                    if (futSt.thithiIndex === 10) {
+                        // Check if this future day's lunar month is Pushya (festMonth 9)
+                        // AND the sun is still in Dhanus (still Dhanurmasa).
+                        const futSunSid = mod360(futSt.sunSiderealLon - futSt.ayanamsha);
+                        const futInDhanus = futSunSid >= 240.0 && futSunSid < 270.0;
+                        if (futInDhanus) {
+                            const futYS = findYearStart(futJ, futInfo);
+                            const futM  = findCurrentMonth(
+                                futJ, futYS.monthStarts, futYS.hasAdhika,
+                                futYS.adhikaStart, futSt.thithiIndex, futYS.kshayaIndex,
+                                futYS.kshayaGapDay
+                            );
+                            if ((futM.monthIndex - 1) === 9 && !futM.isAdhika) {
+                                hasUpcomingPushyaEK = true;
+                            }
+                        }
+                    }
+                }
+                if (hasUpcomingPushyaEK) suppressVE = true;
+            }
+        } else if (festMonth === 9 && month === 1 && inDhanusVE) {
+            // Guard B: Pushya Ekadashi in January while still in Dhanurmasa.
+            // Suppress if December of the same Gregorian year has any Vaikunta
+            // Ekadashi (Margashira or Pushya) with sun in Dhanus.
+            // Scan Dec 15-31 for Shukla Ekadashi in Margashira or Pushya with
+            // sun in Dhanus.
+            let hasDecVaikunta = false;
+            for (let d2 = 15; d2 <= 31 && !hasDecVaikunta; d2++) {
+                const decJ    = buildDateInfo(d2, 12, year, 6, 0,
+                                    longitude, latitude, tzHr, tzMin).j2000Day;
+                const decInfo = makeDateInfoForDay(decJ, dateInfo);
+                const decSt   = computePanchanga(decJ, decInfo);
+                if (decSt.thithiIndex === 10) {
+                    const decSunSid = mod360(decSt.sunSiderealLon - decSt.ayanamsha);
+                    const decInDhanus = decSunSid >= 240.0 && decSunSid < 270.0;
+                    const decYS = findYearStart(decJ, decInfo);
+                    const decM  = findCurrentMonth(
+                        decJ, decYS.monthStarts, decYS.hasAdhika,
+                        decYS.adhikaStart, decSt.thithiIndex, decYS.kshayaIndex,
+                        decYS.kshayaGapDay
+                    );
+                    const decFestMonth = decM.monthIndex - 1;
+                    if (!decM.isAdhika && decInDhanus &&
+                        (decFestMonth === 8 || decFestMonth === 9)) {
+                        hasDecVaikunta = true;
+                    }
+                }
+            }
+            if (hasDecVaikunta) suppressVE = true;
+        } else if (festMonth === 10) {
+            // Guard C: Magha Ekadashi — extremely rare case where Makara
+            // Sankranthi and Ekadashi start coincide so the Ekadashi began
+            // during Dhanurmasa but sunrise is already in Makara.
+            // Only fire if yesterday's sun was in Dhanus.
+            const prevJ    = sunriseJ2000 - 1;
+            const prevInfo = makeDateInfoForDay(prevJ, dateInfo);
+            const prevSt   = computePanchanga(prevJ, prevInfo);
+            const prevSunSid = mod360(prevSt.sunSiderealLon - prevSt.ayanamsha);
+            const prevInDhanus = prevSunSid >= 240.0 && prevSunSid < 270.0;
+            if (!prevInDhanus) {
+                suppressVE = true;
+            } else {
+                // Also suppress if December of the same year has a Vaikunta Ekadashi.
+                let hasDecVaikunta = false;
+                for (let d2 = 15; d2 <= 31 && !hasDecVaikunta; d2++) {
+                    const decJ    = buildDateInfo(d2, 12, year, 6, 0,
+                                        longitude, latitude, tzHr, tzMin).j2000Day;
+                    const decInfo = makeDateInfoForDay(decJ, dateInfo);
+                    const decSt   = computePanchanga(decJ, decInfo);
+                    if (decSt.thithiIndex === 10) {
+                        const decSunSid = mod360(decSt.sunSiderealLon - decSt.ayanamsha);
+                        const decInDhanus = decSunSid >= 240.0 && decSunSid < 270.0;
+                        const decYS = findYearStart(decJ, decInfo);
+                        const decM  = findCurrentMonth(
+                            decJ, decYS.monthStarts, decYS.hasAdhika,
+                            decYS.adhikaStart, decSt.thithiIndex, decYS.kshayaIndex,
+                            decYS.kshayaGapDay
+                        );
+                        const decFestMonth = decM.monthIndex - 1;
+                        if (!decM.isAdhika && decInDhanus &&
+                            (decFestMonth === 8 || decFestMonth === 9)) {
+                            hasDecVaikunta = true;
+                        }
+                    }
+                }
+                if (hasDecVaikunta) suppressVE = true;
+            }
+        }
+
+        if (suppressVE) {
+            const filtered = festivalRaw.filter(f => f !== FESTIVAL_NAMES[31]);
+            festivalRaw = filtered.length > 0 ? filtered : null;
+        }
+    }
+
+    // In an adhika (intercalary) month suppress all tbl-derived festivals
+    // (both vaideeka and non-vaideeka).  Vaideeka observances like
+    // Nanjundayyanavara Vaideeka are keyed to a specific regular month and
+    // should not fire when the same tithiIndex falls in the adhika counterpart.
+    let festival = null;
+    if (festivalRaw && !isAdhika) {
+        festival = festivalRaw.length > 0 ? festivalRaw : null;
+    }
+
+    // Rashi for Moon
+    const rashiName = RASHI_FULL_NAMES[state.rashiIndex];
+
+    // Planet rashis (1-based)
+    function planetRashi(lon) {
+        return Math.trunc(mod360(lon - state.ayanamsha) / 30.0) + 1;
+    }
+    function planetNavamsha(lon) {
+        return Math.trunc(9.0 * mod360(lon - state.ayanamsha) / 30.0 + 1) % 12;
+    }
+
+    const grahas = [
+        { name: 'Ravi',    lon: state.sunSiderealLon },
+        { name: 'Chandra', lon: state.moonSiderealLon },
+        { name: 'Mangala', lon: planets.mangalaRA },
+        { name: 'Budha',   lon: planets.budhaRA },
+        { name: 'Guru',    lon: planets.guruRA },
+        { name: 'Shukra',  lon: planets.shukraRA },
+        { name: 'Shani',   lon: planets.shaniRA },
+        { name: 'Rahu',    lon: rahuLon },
+        { name: 'Kethu',   lon: kethuLon }
+    ].map(g => ({
+        name:    g.name,
+        lon:     g.lon,
+        rashi:   planetRashi(g.lon),
+        navamsha:planetNavamsha(g.lon)
+    }));
+
+    // Format sunrise/sunset
+    let srHr  = Math.trunc(sunriseIST);
+    let srMin = Math.round((sunriseIST - srHr) * 60);
+    if (srMin === 60) { srHr += 1; srMin = 0; }
+    let ssHr  = Math.trunc(sunsetIST);
+    let ssMin = Math.round((sunsetIST - ssHr) * 60);
+    if (ssMin === 60) { ssHr += 1; ssMin = 0; }
+
+    return {
+        // Input echo
+        date:     `${day}-${month}-${year}`,
+        time:     `${String(localHour).padStart(2,'0')}:${String(localMin).padStart(2,'0')}`,
+        location: `${latitude}°N, ${longitude}°E`,
+
+        // Core Panchanga limbs
+        vara:         state.varaName,
+        varaIndex:    state.varaIndex,
+        tithi:        TITHI_NAMES[state.thithiIndex],
+        tithiIndex:   state.thithiIndex,
+        tithiRemPct:  +thithiRemPct.toFixed(2),
+        nakshatra:    NAKSHATRA_NAMES[state.nakIndex],
+        nakshatraIndex: state.nakIndex,
+        nakshatraRemPct: +nakRemPct.toFixed(2),
+        pada:         state.pada + 1,
+        yoga:         YOGA_NAMES[state.yogaIndex] || '',
+        karana:       KARANA_NAMES[state.karanaIndex] || '',
+        paksha,
+
+        // Calendar
+        yearName,
+        lunarMonth:   isAdhika ? yearStartResult.adhikaName : LUNAR_MONTH_NAMES[monthIndex],
+        isAdhika,
+        hasAdhikaMonth: yearStartResult.hasAdhika,
+        adhikaMonthName: yearStartResult.adhikaName,
+        souraMonth:   SOURA_MONTH_NAMES[souraCeil] || '',
+        souraTithi:   displaySouraTithi,
+
+        // Rashi
+        rashi: rashiName,
+
+        // Lagna
+        lagna:         RASHI_NAMES[lagnaRashi - 1] || '',
+        navamshaLagna: RASHI_NAMES[navamshaIdx > 0 ? navamshaIdx - 1 : 11] || '',
+
+        // Sunrise/Sunset
+        sunriseIST: `${srHr}:${String(srMin).padStart(2,'0')}`,
+        sunsetIST:  `${ssHr}:${String(ssMin).padStart(2,'0')}`,
+
+        // Graha positions
+        grahas,
+        ayanamsha: +state.ayanamsha.toFixed(4),
+
+        // Festival
+        festival
+    };
+}
+
+// Export for use in browser (global) or module environments
+if (typeof module !== 'undefined' && module.exports) {
+    module.exports = { computeFullPanchanga };
+} else if (typeof window !== 'undefined') {
+    window.PanchangaEngine = { computeFullPanchanga };
+}
+
+</script>
+<script>
+/* =====================================================================
+   FESTIVAL CALENDAR UI CONTROLLER
+===================================================================== */
+
+const CITY_COORDS = {
+  '12.9716,77.5946':   [12.9716,  77.5946],
+  '12.2958,76.6394':   [12.2958,  76.6394],
+  '13.0033,76.1004':   [13.0033,  76.1004],
+  '16.8524,74.5815':   [16.8524,  74.5815],
+  '37.7799,-121.9780': [37.7799, -121.9780]
+};
+
+const DAY_NAMES  = ['Sunday','Monday','Tuesday','Wednesday','Thursday','Friday','Saturday'];
+const MONTH_NAMES = ['January','February','March','April','May','June',
+                     'July','August','September','October','November','December'];
+const MONTH_SHORT = ['Jan','Feb','Mar','Apr','May','Jun',
+                     'Jul','Aug','Sep','Oct','Nov','Dec'];
+
+// -----------------------------------------------------------------------
+// City selector
+// -----------------------------------------------------------------------
+document.getElementById('inputCity').addEventListener('change', function() {
+  document.getElementById('customCoordsWrap').style.display =
+    this.value === 'custom' ? 'block' : 'none';
+});
+
+// -----------------------------------------------------------------------
+// Set default year to current IST year
+// -----------------------------------------------------------------------
+(function setDefaults() {
+  const now     = new Date();
+  const istDate = new Date(now.getTime() + 330 * 60000);
+  document.getElementById('inputYear').value = istDate.getUTCFullYear();
+})();
+
+// -----------------------------------------------------------------------
+// Form submit
+// -----------------------------------------------------------------------
+document.getElementById('festivalForm').addEventListener('submit', function(e) {
+  e.preventDefault();
+  calculateFestivals();
+});
+
+function showError(msg) {
+  const el = document.getElementById('errorMsg');
+  el.textContent = msg;
+  el.classList.add('visible');
+  document.getElementById('spinnerWrap').classList.remove('visible');
+  document.getElementById('calcBtn').disabled = false;
+}
+
+// -----------------------------------------------------------------------
+// Is a year a leap year?
+// -----------------------------------------------------------------------
+function isLeapYear(y) {
+  return (y % 4 === 0 && y % 100 !== 0) || (y % 400 === 0);
+}
+
+function daysInMonth(m, y) {
+  // m: 1-based month
+  return [0,31,isLeapYear(y)?29:28,31,30,31,30,31,31,30,31,30,31][m];
+}
+
+// -----------------------------------------------------------------------
+// Main calculation
+// -----------------------------------------------------------------------
+function calculateFestivals() {
+  const errorEl  = document.getElementById('errorMsg');
+  errorEl.classList.remove('visible');
+  document.getElementById('output').style.display = 'none';
+
+  const yearVal = parseInt(document.getElementById('inputYear').value, 10);
+  if (isNaN(yearVal) || yearVal < 1900 || yearVal > 2200) {
+    showError('Please enter a valid year between 1900 and 2200.');
+    return;
+  }
+
+  const cityVal = document.getElementById('inputCity').value;
+  let lat, lon, locationLabel;
+  if (cityVal === 'custom') {
+    lat = parseFloat(document.getElementById('inputLat').value);
+    lon = parseFloat(document.getElementById('inputLon').value);
+    if (isNaN(lat) || isNaN(lon)) {
+      showError('Please enter valid coordinates.');
+      return;
+    }
+    const lonLabel = lon < 0 ? `${Math.abs(lon).toFixed(3)}°W` : `${lon.toFixed(3)}°E`;
+    locationLabel = `${lat.toFixed(3)}°N, ${lonLabel}`;
+  } else {
+    [lat, lon] = CITY_COORDS[cityVal];
+    locationLabel = document.querySelector(`#inputCity option[value="${cityVal}"]`).textContent.trim();
+  }
+
+  const spinnerWrap = document.getElementById('spinnerWrap');
+  const calcBtn     = document.getElementById('calcBtn');
+  spinnerWrap.classList.add('visible');
+  calcBtn.disabled = true;
+  document.getElementById('spinnerText').textContent = 'Computing festival calendar…';
+
+  // Run asynchronously so the spinner is visible
+  setTimeout(() => {
+    try {
+      const festivals = scanYearForFestivals(yearVal, lat, lon);
+      renderFestivalTable(festivals, yearVal, locationLabel);
+    } catch (err) {
+      console.error(err);
+      showError('Calculation error: ' + err.message);
+    } finally {
+      spinnerWrap.classList.remove('visible');
+      calcBtn.disabled = false;
+    }
+  }, 30);
+}
+
+// -----------------------------------------------------------------------
+// Scan every day of the year and collect festivals
+// -----------------------------------------------------------------------
+function scanYearForFestivals(year, lat, lon) {
+  const results = [];
+  const tzHr = 5, tzMin = 30; // IST by default; engine uses IST internally
+
+  for (let m = 1; m <= 12; m++) {
+    const days = daysInMonth(m, year);
+    for (let d = 1; d <= days; d++) {
+      let result;
+      try {
+        result = PanchangaEngine.computeFullPanchanga({
+          day: d, month: m, year,
+          localHour: 6, localMin: 0,   // 6 AM — near sunrise, engine will use sunrise-based tithi
+          useSunrise: true,
+          latitude:  lat,
+          longitude: lon
+        });
+      } catch (e) {
+        continue;
+      }
+      if (result.festival && result.festival.length > 0) {
+        results.push({
+          day: d, month: m, year,
+          jsDate: new Date(year, m - 1, d),
+          festivals: result.festival,
+          lunarMonth: result.lunarMonth,
+          isAdhika:   result.isAdhika,
+          tithi:      result.tithi,
+          tithiIndex: result.tithiIndex,
+          paksha:     result.paksha,
+          vara:       result.vara
+        });
+      }
+    }
+  }
+
+  return results;
+}
+
+// -----------------------------------------------------------------------
+// Render the festival table
+// -----------------------------------------------------------------------
+function renderFestivalTable(festivals, year, locationLabel) {
+  const outputEl  = document.getElementById('output');
+  const tbody     = document.getElementById('festivalTableBody');
+  const noFestMsg = document.getElementById('noFestivalsMsg');
+  const summaryEl = document.getElementById('festSummary');
+
+  document.getElementById('outputTitle').textContent = `${year} Festival Calendar`;
+  document.getElementById('outputBadge').textContent  = locationLabel;
+
+  if (festivals.length === 0) {
+    tbody.innerHTML = '';
+    noFestMsg.style.display = 'block';
+    summaryEl.style.display = 'none';
+    outputEl.style.display  = 'block';
+    outputEl.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    return;
+  }
+
+  noFestMsg.style.display = 'none';
+
+  // Group by calendar month for section headers
+  const byMonth = {};
+  for (const f of festivals) {
+    const key = f.month;
+    if (!byMonth[key]) byMonth[key] = [];
+    byMonth[key].push(f);
+  }
+
+  let html = '';
+  let lastMonth = null;
+  let totalOccurrences = 0;
+  let multiDayCount = 0;
+
+  for (const f of festivals) {
+    // Month group header
+    if (f.month !== lastMonth) {
+      html += `<tr class="month-group-row">
+        <td colspan="3">
+          <span class="month-group-label">${MONTH_NAMES[f.month - 1]} ${year}</span>
+        </td>
+      </tr>`;
+      lastMonth = f.month;
+    }
+
+    const dow    = DAY_NAMES[f.jsDate.getDay()];
+    const dayNum = String(f.day).padStart(2, '0');
+    const monStr = MONTH_SHORT[f.month - 1];
+
+    const isMulti = f.festivals.length > 1;
+    if (isMulti) multiDayCount++;
+    totalOccurrences += f.festivals.length;
+
+    // Date cell
+    const dateCell = `
+      <td class="fest-date-cell">
+        <span class="fest-date-main">${dayNum} ${monStr} ${year}</span>
+        <span class="fest-date-day">${dow}</span>
+      </td>`;
+
+    // Festival name cell
+    let namesCell;
+    if (!isMulti) {
+      namesCell = `<td class="fest-names-cell">
+        <span class="fest-single">${escHtml(f.festivals[0])}</span>
+      </td>`;
+    } else {
+      const items = f.festivals.map(name =>
+        `<div class="fest-multi-badge">
+          <span class="fest-bullet"></span>
+          <span class="fest-name-text">${escHtml(name)}</span>
+        </div>`
+      ).join('');
+      namesCell = `<td class="fest-names-cell">
+        <div class="fest-multi-count">
+          <span class="multi-pill">${f.festivals.length} festivals</span>
+        </div>
+        <div class="fest-multi-wrap">${items}</div>
+      </td>`;
+    }
+
+    // Lunar context cell
+    const masaLabel = f.isAdhika ? `Adhika ${f.lunarMonth}` : f.lunarMonth;
+    const tithiNum  = f.tithiIndex + 1;
+    const contextCell = `
+      <td class="fest-context-cell">
+        <span class="fest-masa">${escHtml(masaLabel)} Masa</span>
+        <span class="fest-tithi">${escHtml(f.paksha)} · ${escHtml(f.tithi)} (${tithiNum})</span>
+      </td>`;
+
+    html += `<tr>${dateCell}${namesCell}${contextCell}</tr>`;
+  }
+
+  tbody.innerHTML = html;
+
+  // Summary bar
+  document.getElementById('summaryTotal').textContent  = festivals.length;
+  document.getElementById('summaryMulti').textContent  = multiDayCount;
+  document.getElementById('summaryTotal2').textContent = totalOccurrences;
+  summaryEl.style.display = 'flex';
+
+  outputEl.style.display = 'block';
+  requestAnimationFrame(() => {
+    outputEl.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  });
+}
+
+function escHtml(str) {
+  return String(str)
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;');
+}
+
+</script>
+</body>
+</html>
