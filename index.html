@@ -2242,7 +2242,8 @@ function findYearStart(j2000Day, dateInfoTemplate) {
         'Adhika Shravana',   'Adhika Bhadrapada',
         'Adhika Ashvayuja',  'Adhika Karthika',
         'Adhika Margashira', 'Adhika Pushya',
-        'Adhika Magha',      'Adhika Palguna'
+        'Adhika Magha',      'Adhika Palguna',
+        'Adhika Palguna'
     ];
 
     let day = j2000Day;
@@ -2280,7 +2281,7 @@ function findYearStart(j2000Day, dateInfoTemplate) {
     // avoiding the fractional-boundary issue where day+1 may still be Amavasya.
     day = retreatToMonthStart(Math.floor(day) + 2, dateInfoTemplate);
 
-    const monthStarts = new Array(12).fill(0);
+    const monthStarts = new Array(13).fill(0);
     monthStarts[0] = day;   // Chaitra
 
     let hasAdhika    = false;
@@ -2288,7 +2289,7 @@ function findYearStart(j2000Day, dateInfoTemplate) {
     let adhikaStart  = 0;
     let adhikaName   = '';
 
-    for (let month = 1; month <= 11; month++) {
+    for (let month = 1; month <= 12; month++) {
         day = advanceToMonthStart(day, dateInfoTemplate);
         state = computePanchanga(day, makeDateInfoForDay(day, dateInfoTemplate));
 
@@ -2391,7 +2392,8 @@ function findCurrentMonth(j2000Day, monthStarts, hasAdhika, adhikaStart, sunrise
                 Math.floor(j2000Day) === Math.floor(monthStartFrac) &&
                 j2000Day < monthStartFrac) {
                 if (hasAdhika && adhikaStart !== undefined &&
-                    adhikaStart >= monthStartFrac - 32.0) {
+                    adhikaStart >= monthStartFrac - 32.0 &&
+                    adhikaStart < monthStartFrac) {
                     // Sub-case B: adhika month immediately preceded this one
                     // (adhika started within ~32 days before this month's start).
                     isAdhika = true;
