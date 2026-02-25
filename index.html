@@ -2805,9 +2805,14 @@ function computeFullPanchanga(params) {
     //   2. If the vaideeka thithi starts after 3:30 PM today (not present at 3:30 today
     //      but present at 3:30 tomorrow) → use tomorrow (suppress today, fire tomorrow).
     const kPm330UT = 10.0;  // 15:30 IST = 10:00 UT
+    const pm330J2000Yesterday = dateInfo.j2000DaysInt - 1.0 + kPm330UT / 24.0;
     const pm330J2000Today    = dateInfo.j2000DaysInt + kPm330UT / 24.0;
     const pm330J2000Tomorrow = dateInfo.j2000DaysInt + 1.0 + kPm330UT / 24.0;
 
+    const pm330InfoYesterday = Object.assign({}, dateInfo, {
+        j2000Day: pm330J2000Yesterday,
+        utHours:  kPm330UT
+    });
     const pm330InfoToday = Object.assign({}, dateInfo, {
         j2000Day: pm330J2000Today,
         utHours:  kPm330UT
@@ -2816,9 +2821,11 @@ function computeFullPanchanga(params) {
         j2000Day: pm330J2000Tomorrow,
         utHours:  kPm330UT
     });
+    const pm330StateYesterday = computePanchanga(pm330J2000Yesterday, pm330InfoYesterday);
     const pm330StateToday    = computePanchanga(pm330J2000Today,    pm330InfoToday);
     const pm330StateTomorrow = computePanchanga(pm330J2000Tomorrow, pm330InfoTomorrow);
 
+    const tblAtPm330Yesterday = lookupFestival(festMonth, pm330StateYesterday.thithiIndex);
     const tblAtPm330Today    = lookupFestival(festMonth, pm330StateToday.thithiIndex);
     const tblAtPm330Tomorrow = lookupFestival(festMonth, pm330StateTomorrow.thithiIndex);
 
@@ -2841,7 +2848,17 @@ function computeFullPanchanga(params) {
         // fire tomorrow (suppress today).
         tblFestival = null;
     } else {
-        tblFestival = null;
+        // Fallback: vaideeka thithi absent at both 3:30 PMs (tithi started after
+        // today's 3:30 PM and ended before tomorrow's 3:30 PM).  If it is present
+        // at today's sunrise, fire today — unless tomorrow's sunrise has it too
+        // (prefer the later day), or yesterday's 3:30 PM already had it (meaning
+        // the festival already fired yesterday via rule 1).
+        if (isVaideeka(tblAtSunrise) && !isTithiDupFirst
+                && !isVaideeka(tblAtPm330Yesterday)) {
+            tblFestival = tblAtSunrise;
+        } else {
+            tblFestival = null;
+        }
 
         if (tblAtSunrise && !isVaideeka(tblAtSunrise)) {
             // Non-vaideeka: tithi is present at today's sunrise.
@@ -2882,6 +2899,7 @@ function computeFullPanchanga(params) {
     const specAtSunrise = detectSpecialFestival(sunriseState, festMonth);
     const specAtQuery   = detectSpecialFestival(state, festMonth);
 
+    const specAtPm330Yesterday = detectSpecialFestival(pm330StateYesterday, festMonth);
     const specAtPm330Today    = detectSpecialFestival(pm330StateToday,    festMonth);
     const specAtPm330Tomorrow = detectSpecialFestival(pm330StateTomorrow, festMonth);
 
@@ -2900,7 +2918,15 @@ function computeFullPanchanga(params) {
         // suppress today, fire tomorrow.
         specFestival = null;
     } else {
-        specFestival = null;
+        // Fallback: vaideeka thithi absent at both 3:30 PMs.  If it is present at
+        // today's sunrise, fire today — unless tomorrow's sunrise has it too, or
+        // yesterday's 3:30 PM already had it.
+        if (isVaideeka(specAtSunrise) && !isTithiDupFirst
+                && !isVaideeka(specAtPm330Yesterday)) {
+            specFestival = specAtSunrise;
+        } else {
+            specFestival = null;
+        }
 
         if (specAtSunrise && !isVaideeka(specAtSunrise)) {
             // Non-vaideeka: tithi at sunrise.
