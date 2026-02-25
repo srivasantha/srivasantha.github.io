@@ -2717,9 +2717,12 @@ function computeFullPanchanga(params) {
     const tblAtPm330Tomorrow = lookupFestival(festMonth, pm330StateTomorrow.thithiIndex);
 
     let tblFestival;
-    if (isVaideeka(tblAtPm330Today)) {
-        // Vaideeka thithi is present at 3:30 PM today → fire today.
+    if (isVaideeka(tblAtPm330Today) && !isVaideeka(tblAtPm330Tomorrow)) {
+        // Vaideeka thithi is present at 3:30 PM today but not tomorrow → fire today.
         tblFestival = tblAtPm330Today;
+    } else if (isVaideeka(tblAtPm330Today) && isVaideeka(tblAtPm330Tomorrow)) {
+        // Vaideeka thithi spans 3:30 PM on both days → suppress today, fire tomorrow.
+        tblFestival = null;
     } else if (isVaideeka(tblAtPm330Tomorrow) && !isVaideeka(tblAtPm330Today)) {
         // Vaideeka thithi starts after 3:30 PM today → fire tomorrow (suppress today).
         tblFestival = null;
@@ -2747,9 +2750,12 @@ function computeFullPanchanga(params) {
     const specAtPm330Tomorrow = detectSpecialFestival(pm330StateTomorrow, festMonth);
 
     let specFestival;
-    if (isVaideeka(specAtPm330Today)) {
-        // Vaideeka special festival present at 3:30 PM today → fire today.
+    if (isVaideeka(specAtPm330Today) && !isVaideeka(specAtPm330Tomorrow)) {
+        // Vaideeka special festival present at 3:30 PM today but not tomorrow → fire today.
         specFestival = specAtPm330Today;
+    } else if (isVaideeka(specAtPm330Today) && isVaideeka(specAtPm330Tomorrow)) {
+        // Vaideeka special festival spans 3:30 PM on both days → suppress today, fire tomorrow.
+        specFestival = null;
     } else if (isVaideeka(specAtPm330Tomorrow) && !isVaideeka(specAtPm330Today)) {
         // Vaideeka special festival starts after 3:30 PM today → suppress today.
         specFestival = null;
