@@ -2949,10 +2949,47 @@ function computeFullPanchanga(params) {
             specFestival = null;
         }
 
+        if (specAtPm330Today && !isVaideeka(specAtPm330Today) && !specAtSunrise
+                && specAtPm330Today !== specAtPm330Yesterday) {
+            // Non-vaideeka special festival: nakshatra/condition starts after sunrise
+            // but is present at 3:30 PM today.  Fire today if:
+            //   - it wasn't already present at yesterday's 3:30 PM (already fired), and
+            //   - tomorrow's sunrise won't also have it (prefer the later day), and
+            //   - it doesn't persist to tomorrow's 3:30 PM (fire tomorrow instead).
+            const specAtNextSunrise = detectSpecialFestival(nextSunriseStateb, nextFestMonth);
+            if (specAtNextSunrise !== specAtPm330Today
+                    && specAtPm330Today !== specAtPm330Tomorrow) {
+                specFestivals.push(specAtPm330Today);
+            }
+        }
+
         if (specAtSunrise && !isVaideeka(specAtSunrise)) {
-            // Non-vaideeka: tithi at sunrise.
+            // Non-vaideeka: nakshatra/condition present at today's sunrise.
             // If tomorrow's sunrise also has it, suppress today (second day is preferred).
-            if (!isTithiDupFirst) specFestivals.push(specAtSunrise);
+            // Additionally, for weekday-based festivals (e.g. Varamahalakshmi on Friday),
+            // if the same festival fires again 7 days later (same weekday, still valid),
+            // suppress today in favour of the later occurrence.
+            let isWeekdayDupFirst = false;
+            const nextWeekSunriseJ2000 = sunriseJ2000 + 7.0;
+            const nextWeekSunriseInfo  = Object.assign({}, dateInfo, {
+                j2000Day: nextWeekSunriseJ2000,
+                utHours:  (nextWeekSunriseJ2000 - Math.floor(nextWeekSunriseJ2000)) * 24.0
+            });
+            const nextWeekSunriseState = computePanchanga(nextWeekSunriseJ2000, nextWeekSunriseInfo);
+            const { monthIndex: nextWeekMonthIndex } = findCurrentMonth(
+                nextWeekSunriseJ2000,
+                yearStartResult.monthStarts,
+                yearStartResult.hasAdhika,
+                yearStartResult.adhikaStart,
+                nextWeekSunriseState.thithiIndex,
+                yearStartResult.kshayaIndex,
+                yearStartResult.kshayaGapDay
+            );
+            const nextWeekFestMonth = nextWeekMonthIndex - 1;
+            const specAtNextWeek = detectSpecialFestival(nextWeekSunriseState, nextWeekFestMonth);
+            if (specAtNextWeek === specAtSunrise) isWeekdayDupFirst = true;
+
+            if (!isTithiDupFirst && !isWeekdayDupFirst) specFestivals.push(specAtSunrise);
         }
 
         // Probe for a special festival in the between-sunrise window (same
