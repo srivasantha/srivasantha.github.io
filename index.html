@@ -1283,8 +1283,7 @@ span.flatpickr-weekday {
             <div class="progress-bar gold" id="pb-tithi" style="width:0%"></div>
           </div>
           <div class="progress-label">
-            <span>ಕಳೆದಿದೆ</span>
-            <span id="pct-tithi">—</span>
+            <span id="tithi-range">—</span>
           </div>
         </div>
         <div class="mini-card">
@@ -1295,8 +1294,7 @@ span.flatpickr-weekday {
             <div class="progress-bar saffron" id="pb-nak" style="width:0%"></div>
           </div>
           <div class="progress-label">
-            <span>ಕಳೆದಿದೆ</span>
-            <span id="pct-nak">—</span>
+            <span id="nak-range">—</span>
           </div>
         </div>
       </div>
@@ -2012,6 +2010,136 @@ function computePlanetRAs(j2000Day, pancState) {
 }
 
 // ---------------------------------------------------------------------------
+// Tithi boundary finder
+// ---------------------------------------------------------------------------
+
+/**
+ * Binary-search for the J2000 instant when Moon-Sun elongation equals
+ * targetElong degrees (0–360).  Searches within ±1.5 days of nearJ2000.
+ *
+ * @param {number} targetElong  target elongation (0 = new moon / Pratipada start)
+ * @param {number} nearJ2000    J2000 day close to the boundary
+ * @param {object} dateInfo     observer dateInfo (location fields used; time fields overwritten)
+ * @returns {number}            J2000 day of the crossing, or NaN if not found
+ */
+function findTithiBoundary(targetElong, nearJ2000, dateInfo) {
+    function elongDiff(j2000) {
+        const info = Object.assign({}, dateInfo, {
+            j2000Day: j2000,
+            utHours:  (j2000 - Math.trunc(j2000)) * 24.0
+        });
+        const s = computePanchanga(j2000, info);
+        const elong = mod360(s.moonSiderealLon - s.sunSiderealLon);
+        // Signed diff wrapped to (–180, +180] so bisection always converges
+        let diff = targetElong - elong;
+        if (diff >  180) diff -= 360;
+        if (diff < -180) diff += 360;
+        return diff;
+    }
+
+    // Scan ±1.5 days in 30 steps to find a sign change
+    const HALF = 1.5, STEPS = 30;
+    const step = (2 * HALF) / STEPS;
+    let lo = nearJ2000 - HALF;
+    let da = elongDiff(lo);
+    let hiJ = NaN;
+    for (let i = 1; i <= STEPS; i++) {
+        const j = lo + i * step;
+        const d = elongDiff(j);
+        if (da * d <= 0) { hiJ = j; break; }
+        da = d;
+    }
+    if (isNaN(hiJ)) return NaN;
+
+    // Bisect to < 1 second precision
+    let a = hiJ - step, b = hiJ;
+    da = elongDiff(a);
+    for (let iter = 0; iter < 50; iter++) {
+        if ((b - a) < 1e-5) return (a + b) / 2;
+        const mid = (a + b) / 2;
+        const dm  = elongDiff(mid);
+        if (da * dm <= 0) { b = mid; } else { a = mid; da = dm; }
+    }
+    return (a + b) / 2;
+}
+
+/**
+ * Binary-search for the J2000 instant when the Moon's sidereal longitude
+ * equals targetLon degrees — used to find nakshatra start/end boundaries.
+ * Each nakshatra spans 360/27 ≈ 13.333° of sidereal Moon longitude.
+ * Searches within ±1 day of nearJ2000 (a nakshatra is always < 2 days long).
+ */
+function findNakBoundary(targetLon, nearJ2000, dateInfo) {
+    const NAK_SPAN = 360.0 / 27.0;   // 13.333...°
+
+    function lonDiff(j2000) {
+        const info = Object.assign({}, dateInfo, {
+            j2000Day: j2000,
+            utHours:  (j2000 - Math.trunc(j2000)) * 24.0
+        });
+        const s = computePanchanga(j2000, info);
+        const lon = mod360(s.moonSiderealLon - s.ayanamsha);
+        let diff = targetLon - lon;
+        if (diff >  180) diff -= 360;
+        if (diff < -180) diff += 360;
+        return diff;
+    }
+
+    // Scan ±1 day in 24 steps (~2h each) to bracket the crossing
+    const HALF = 1.0, STEPS = 24;
+    const step = (2 * HALF) / STEPS;
+    let lo = nearJ2000 - HALF;
+    let da = lonDiff(lo);
+    let hiJ = NaN;
+    for (let i = 1; i <= STEPS; i++) {
+        const j = lo + i * step;
+        const d = lonDiff(j);
+        if (da * d <= 0) { hiJ = j; break; }
+        da = d;
+    }
+    if (isNaN(hiJ)) return NaN;
+
+    // Bisect to < 1 second precision
+    let a = hiJ - step, b = hiJ;
+    da = lonDiff(a);
+    for (let iter = 0; iter < 50; iter++) {
+        if ((b - a) < 1e-5) return (a + b) / 2;
+        const mid = (a + b) / 2;
+        const dm  = lonDiff(mid);
+        if (da * dm <= 0) { b = mid; } else { a = mid; da = dm; }
+    }
+    return (a + b) / 2;
+}
+
+/**
+ * Convert a J2000 day to a local-time string "H:MM", with an optional
+ * day-offset label when the instant falls outside today's local midnight window.
+ *
+ * Returns { str: "6:42", dayOffset: 0 }  — today
+ *         { str: "23:14", dayOffset: -1 } — yesterday
+ *         { str: "1:03",  dayOffset: +1 } — tomorrow
+ *
+ * @param {number} j2000          the instant
+ * @param {number} tzOffsetHours  dateInfo.tzFracDay * 24
+ * @param {number} baseDateJ2000  integer J2000 day of the reference calendar date
+ */
+function j2000ToLocalTimeStr(j2000, tzOffsetHours, baseDateJ2000) {
+    // UT hours within the J2000 day
+    const utH = (j2000 - Math.trunc(j2000)) * 24.0;
+    // How many integer days j2000 is away from baseDateJ2000
+    const dayOffset = Math.round(j2000) - Math.round(baseDateJ2000);
+    // Local time of day (0–24) within that day
+    let localH = utH + tzOffsetHours;
+    // Normalise to [0, 24)
+    localH = ((localH % 24) + 24) % 24;
+    let h = Math.trunc(localH);
+    let m = Math.round((localH - h) * 60);
+    if (m === 60) { h += 1; m = 0; }
+    if (h >= 24)  { h = 0; }
+    return { str: `${h}:${String(m).padStart(2, '0')}`, dayOffset };
+}
+
+// ---------------------------------------------------------------------------
 // Sunrise / Sunset
 // ---------------------------------------------------------------------------
 
@@ -2019,24 +2147,27 @@ function computePlanetRAs(j2000Day, pancState) {
  * Compute sunrise and sunset in decimal IST hours.
  * @param {number} j2000Day  integer day
  * @param {object} dateInfo
- * @returns {{sunriseIST: number, sunsetIST: number}}
+ * @returns {{sunriseUT: number, sunsetUT: number}}
  */
 function computeSunrise(j2000Day, dateInfo) {
-    const kIstOffset = 5.5;
-    const kRiseAlt   = -0.583;   // solar altitude at geometric rise (degrees)
+    const kRiseAlt = -0.583;   // solar altitude at geometric rise (degrees)
 
     // Evaluate Sun position at approximately local noon.
+    // Use the observer's actual local noon in UT: 12:00 local = 12 - tzOffset UT.
+    const tzOffsetHours = dateInfo.tzFracDay * 24.0;
+    const noonUT  = 12.0 - tzOffsetHours;
     const dayInt  = Math.trunc(j2000Day);
-    const noonDay = dayInt + (12.0 - kIstOffset) / 24.0;
+    const noonDay = dayInt + noonUT / 24.0;
 
     // Temporary dateInfo for noon computation.
     const noonInfo = Object.assign({}, dateInfo, {
-        utHours:  12.0 - kIstOffset,
+        utHours:  noonUT,
         j2000Day: noonDay
     });
     const noonState = computePanchanga(noonDay, noonInfo);
 
     // Time of Sun's transit (upper culmination) in UT hours.
+    // gmst0 = (sunMeanLon + 180) / 15 is the GMST at 0h UT (Schlyter approximation).
     let utTransit = (noonState.sunRA - noonState.gmst0 * 15.0 - dateInfo.longitude) / 15.0;
     utTransit = ((utTransit % 24.0) + 24.0) % 24.0;
 
@@ -2050,10 +2181,10 @@ function computeSunrise(j2000Day, dateInfo) {
         lhaHours = Math.acos(cosLHA) * RAD2DEG / 15.0;
     }
 
-    const sunriseIST = utTransit - lhaHours + kIstOffset;
-    const sunsetIST  = utTransit + lhaHours + kIstOffset;
+    const sunriseUT = utTransit - lhaHours;
+    const sunsetUT  = utTransit + lhaHours;
 
-    return { sunriseIST, sunsetIST };
+    return { sunriseUT, sunsetUT };
 }
 
 // ---------------------------------------------------------------------------
@@ -2732,12 +2863,12 @@ function computeFullPanchanga(params) {
                                    longitude, latitude, tzHr, tzMin);
 
     // Compute sunrise using the integer day
-    const { sunriseIST, sunsetIST } = computeSunrise(dateInfo.j2000DaysInt, dateInfo);
+    const { sunriseUT, sunsetUT } = computeSunrise(dateInfo.j2000DaysInt, dateInfo);
 
     // Determine which J2000 day to use
     let queryDay = dateInfo.j2000Day;
     if (useSunrise) {
-        queryDay = dateInfo.j2000DaysInt + (sunriseIST - 5.5) / 24.0;
+        queryDay = dateInfo.j2000DaysInt + sunriseUT / 24.0;
     }
 
     // Compute Panchanga at query time
@@ -2747,7 +2878,7 @@ function computeFullPanchanga(params) {
     });
     // Recalculate utHours for sunrise mode
     if (useSunrise) {
-        dateInfoQuery.utHours = sunriseIST - 5.5;  // convert IST to UT
+        dateInfoQuery.utHours = sunriseUT;
     }
 
     let state = computePanchanga(queryDay, dateInfoQuery);
@@ -2757,15 +2888,48 @@ function computeFullPanchanga(params) {
     // the tithi at sunrise, not at an arbitrary query time.  This prevents the
     // same festival firing on two consecutive calendar days simply because a
     // long tithi straddles midnight.
-    const sunriseJ2000   = dateInfo.j2000DaysInt + (sunriseIST - 5.5) / 24.0;
+    const sunriseJ2000   = dateInfo.j2000DaysInt + sunriseUT / 24.0;
     const sunriseDateInfo = Object.assign({}, dateInfo, {
         j2000Day: sunriseJ2000,
-        utHours:  sunriseIST - 5.5
+        utHours:  sunriseUT
     });
     const sunriseState = computePanchanga(sunriseJ2000, sunriseDateInfo);
 
     const thithiRemPct    = (1.0 - (state.thithiFrac - state.thithiIndex)) * 100.0;
     const nakRemPct       = (1.0 - (state.nakFrac - Math.trunc(state.nakFrac))) * 100.0;
+
+    // Tithi start / end times (binary search on Moon-Sun elongation)
+    const tzOffHrs       = dateInfo.tzFracDay * 24.0;
+    const startElong     = mod360(state.thithiIndex * 12.0);
+    const endElong       = mod360((state.thithiIndex + 1) * 12.0);
+    const tithiStartJ    = findTithiBoundary(startElong, queryDay, dateInfo);
+    const tithiEndJ      = findTithiBoundary(endElong,   queryDay, dateInfo);
+    function formatTithiTime(j2000) {
+        if (isNaN(j2000)) return '?';
+        const { str, dayOffset } = j2000ToLocalTimeStr(j2000, tzOffHrs, dateInfo.j2000DaysInt);
+        if (dayOffset === -1) return str + ' (ನಿನ್ನೆ)';
+        if (dayOffset === +1) return str + ' (ನಾಳೆ)';
+        return str;
+    }
+    const tithiStartStr = formatTithiTime(tithiStartJ);
+    const tithiEndStr   = formatTithiTime(tithiEndJ);
+
+    // Nakshatra start / end times (binary search on sidereal Moon longitude)
+    const NAK_SPAN       = 360.0 / 27.0;   // 13.333...°
+    // nakIndex is 1-based; boundary before it is (nakIndex-1)*NAK_SPAN
+    const nakStartLon    = mod360((state.nakIndex - 1) * NAK_SPAN);
+    const nakEndLon      = mod360( state.nakIndex      * NAK_SPAN);
+    const nakStartJ      = findNakBoundary(nakStartLon, queryDay, dateInfo);
+    const nakEndJ        = findNakBoundary(nakEndLon,   queryDay, dateInfo);
+    function formatNakTime(j2000) {
+        if (isNaN(j2000)) return '?';
+        const { str, dayOffset } = j2000ToLocalTimeStr(j2000, tzOffHrs, dateInfo.j2000DaysInt);
+        if (dayOffset === -1) return str + ' (ನಿನ್ನೆ)';
+        if (dayOffset === +1) return str + ' (ನಾಳೆ)';
+        return str;
+    }
+    const nakStartStr = formatNakTime(nakStartJ);
+    const nakEndStr   = formatNakTime(nakEndJ);
 
     // Planet positions
     const planets = computePlanetRAs(queryDay, state);
@@ -3346,12 +3510,12 @@ function computeFullPanchanga(params) {
                 // the January occurrence.
                 const decDateInfo0 = buildDateInfo(d2, 12, year, 6, 0,
                                         longitude, latitude, tzHr, tzMin);
-                const { sunriseIST: decSrIST } = computeSunrise(decDateInfo0.j2000DaysInt, decDateInfo0);
-                const decJ    = decDateInfo0.j2000DaysInt + (decSrIST - 5.5) / 24.0;
+                const { sunriseUT: decSrUT } = computeSunrise(decDateInfo0.j2000DaysInt, decDateInfo0);
+                const decJ    = decDateInfo0.j2000DaysInt + decSrUT / 24.0;
                 const decInfo = Object.assign({}, decDateInfo0, {
                     j2000Day: decJ,
                     j2000DaysInt: decDateInfo0.j2000DaysInt,
-                    utHours: decSrIST - 5.5
+                    utHours: decSrUT
                 });
                 const decSt   = computePanchanga(decJ, decInfo);
                 if (decSt.thithiIndex === 10) {
@@ -3460,12 +3624,15 @@ function computeFullPanchanga(params) {
         navamsha:planetNavamsha(g.lon)
     }));
 
-    // Format sunrise/sunset
-    let srHr  = Math.trunc(sunriseIST);
-    let srMin = Math.round((sunriseIST - srHr) * 60);
+    // Format sunrise/sunset in observer's local time
+    const tzOffsetHours = dateInfo.tzFracDay * 24.0;
+    const sunriseLocal = sunriseUT + tzOffsetHours;
+    const sunsetLocal  = sunsetUT  + tzOffsetHours;
+    let srHr  = Math.trunc(sunriseLocal);
+    let srMin = Math.round((sunriseLocal - srHr) * 60);
     if (srMin === 60) { srHr += 1; srMin = 0; }
-    let ssHr  = Math.trunc(sunsetIST);
-    let ssMin = Math.round((sunsetIST - ssHr) * 60);
+    let ssHr  = Math.trunc(sunsetLocal);
+    let ssMin = Math.round((sunsetLocal - ssHr) * 60);
     if (ssMin === 60) { ssHr += 1; ssMin = 0; }
 
     return {
@@ -3480,9 +3647,13 @@ function computeFullPanchanga(params) {
         tithi:        TITHI_NAMES[state.thithiIndex],
         tithiIndex:   state.thithiIndex,
         tithiRemPct:  +thithiRemPct.toFixed(2),
+        tithiStart:   tithiStartStr,
+        tithiEnd:     tithiEndStr,
         nakshatra:    NAKSHATRA_NAMES[state.nakIndex],
         nakshatraIndex: state.nakIndex,
         nakshatraRemPct: +nakRemPct.toFixed(2),
+        nakStart:     nakStartStr,
+        nakEnd:       nakEndStr,
         pada:         state.pada + 1,
         yoga:         YOGA_NAMES[state.yogaIndex] || '',
         karana:       KARANA_NAMES[state.karanaIndex] || '',
@@ -3504,9 +3675,9 @@ function computeFullPanchanga(params) {
         lagna:         RASHI_NAMES[lagnaRashi - 1] || '',
         navamshaLagna: RASHI_NAMES[navamshaIdx > 0 ? navamshaIdx - 1 : 11] || '',
 
-        // Sunrise/Sunset
-        sunriseIST: `${srHr}:${String(srMin).padStart(2,'0')}`,
-        sunsetIST:  `${ssHr}:${String(ssMin).padStart(2,'0')}`,
+        // Sunrise/Sunset (observer's local time)
+        sunriseLocal: `${srHr}:${String(srMin).padStart(2,'0')}`,
+        sunsetLocal:  `${ssHr}:${String(ssMin).padStart(2,'0')}`,
 
         // Graha positions
         grahas,
@@ -3546,6 +3717,18 @@ const CITY_COORDS = {
   '37.7799,-121.9780':  [ 37.7799, -121.9780],
   '50.7753,6.0839':    [ 50.7753,    6.0839],
   '-33.8623,151.2077': [-33.8623,  151.2077]
+};
+
+// Fixed standard timezone offsets (hours, minutes) for each preset city.
+// These are standard (non-DST) offsets; DST is not modelled by the engine.
+const CITY_TZ = {
+  '12.9716,77.5946':   [5,  30],  // IST UTC+5:30
+  '12.2958,76.6394':   [5,  30],  // IST UTC+5:30
+  '13.0033,76.1004':   [5,  30],  // IST UTC+5:30
+  '16.8524,74.5815':   [5,  30],  // IST UTC+5:30
+  '37.7799,-121.9780': [-8,  0],  // PST UTC-8
+  '50.7753,6.0839':    [1,   0],  // CET UTC+1
+  '-33.8623,151.2077': [11,  0],  // AEDT UTC+11 (fixed)
 };
 
 // ---------------------------------------------------------------------------
@@ -3743,6 +3926,18 @@ function calculate() {
     [lat, lon] = CITY_COORDS[city];
   }
 
+  // Determine timezone offset (hours, minutes).
+  // Preset cities have known standard offsets; custom locations use the
+  // solar approximation: offset = round(longitude / 15) hours.
+  let tzHr, tzMin;
+  if (city !== 'custom' && CITY_TZ[city]) {
+    [tzHr, tzMin] = CITY_TZ[city];
+  } else {
+    // Approximate: nearest whole-hour offset from longitude.
+    tzHr  = Math.round(lon / 15);
+    tzMin = 0;
+  }
+
   const MONTHS = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
   const metaDate = `${day} ${MONTHS[month-1]} ${year}`;
   const metaTime = `${String(hour).padStart(2,'0')}:${String(minute).padStart(2,'0')}`;
@@ -3756,7 +3951,9 @@ function calculate() {
         localMin:  minute,
         useSunrise,
         latitude:  lat,
-        longitude: lon
+        longitude: lon,
+        tzHr,
+        tzMin,
       });
 
       displayResult(result, { metaDate, metaTime, cityName });
@@ -3795,23 +3992,20 @@ function displayResult(r, meta) {
   const tithiPaksha = r.tithiIndex < 15 ? 'ಶುಕ್ಲ' : 'ಕೃಷ್ಣ';
   document.getElementById('mc-tithi-sub').textContent =
     `${tithiPaksha} · ${r.tithiIndex + 1} / 30`;
-  const tithiElapsed = 100 - r.tithiRemPct;
-  document.getElementById('pb-tithi').style.width  = tithiElapsed.toFixed(1) + '%';
-  document.getElementById('pct-tithi').textContent =
-    tithiElapsed.toFixed(1) + '% · ' + r.tithiRemPct.toFixed(1) + '% ಬಾಕಿ ಇದೆ';
+  document.getElementById('pb-tithi').style.width  = (100 - r.tithiRemPct).toFixed(1) + '%';
+  document.getElementById('tithi-range').textContent =
+    `${r.tithiStart} – ${r.tithiEnd}`;
 
   // Nakshatra mini-card
   document.getElementById('mc-nak').textContent = r.nakshatra;
   document.getElementById('mc-nak-sub').textContent =
     `ಪಾದ ${r.pada} · ${r.nakshatraIndex} / 27`;
-  const nakElapsed = 100 - r.nakshatraRemPct;
-  document.getElementById('pb-nak').style.width  = nakElapsed.toFixed(1) + '%';
-  document.getElementById('pct-nak').textContent =
-    nakElapsed.toFixed(1) + '% · ' + r.nakshatraRemPct.toFixed(1) + '% ಬಾಕಿ ಇದೆ';
+  document.getElementById('pb-nak').style.width  = (100 - r.nakshatraRemPct).toFixed(1) + '%';
+  document.getElementById('nak-range').textContent = `${r.nakStart} – ${r.nakEnd}`;
 
   // Sunrise / sunset row
-  document.getElementById('sr-time').textContent  = r.sunriseIST;
-  document.getElementById('ss-time').textContent  = r.sunsetIST;
+  document.getElementById('sr-time').textContent  = r.sunriseLocal;
+  document.getElementById('ss-time').textContent  = r.sunsetLocal;
 
 
   // Calendar table

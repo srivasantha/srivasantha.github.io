@@ -2054,24 +2054,27 @@ function computePlanetRAs(j2000Day, pancState) {
  * Compute sunrise and sunset in decimal IST hours.
  * @param {number} j2000Day  integer day
  * @param {object} dateInfo
- * @returns {{sunriseIST: number, sunsetIST: number}}
+ * @returns {{sunriseUT: number, sunsetUT: number}}
  */
 function computeSunrise(j2000Day, dateInfo) {
-    const kIstOffset = 5.5;
-    const kRiseAlt   = -0.583;   // solar altitude at geometric rise (degrees)
+    const kRiseAlt = -0.583;   // solar altitude at geometric rise (degrees)
 
     // Evaluate Sun position at approximately local noon.
+    // Use the observer's actual local noon in UT: 12:00 local = 12 - tzOffset UT.
+    const tzOffsetHours = dateInfo.tzFracDay * 24.0;
+    const noonUT  = 12.0 - tzOffsetHours;
     const dayInt  = Math.trunc(j2000Day);
-    const noonDay = dayInt + (12.0 - kIstOffset) / 24.0;
+    const noonDay = dayInt + noonUT / 24.0;
 
     // Temporary dateInfo for noon computation.
     const noonInfo = Object.assign({}, dateInfo, {
-        utHours:  12.0 - kIstOffset,
+        utHours:  noonUT,
         j2000Day: noonDay
     });
     const noonState = computePanchanga(noonDay, noonInfo);
 
     // Time of Sun's transit (upper culmination) in UT hours.
+    // gmst0 = (sunMeanLon + 180) / 15 is the GMST at 0h UT (Schlyter approximation).
     let utTransit = (noonState.sunRA - noonState.gmst0 * 15.0 - dateInfo.longitude) / 15.0;
     utTransit = ((utTransit % 24.0) + 24.0) % 24.0;
 
@@ -2085,10 +2088,10 @@ function computeSunrise(j2000Day, dateInfo) {
         lhaHours = Math.acos(cosLHA) * RAD2DEG / 15.0;
     }
 
-    const sunriseIST = utTransit - lhaHours + kIstOffset;
-    const sunsetIST  = utTransit + lhaHours + kIstOffset;
+    const sunriseUT = utTransit - lhaHours;
+    const sunsetUT  = utTransit + lhaHours;
 
-    return { sunriseIST, sunsetIST };
+    return { sunriseUT, sunsetUT };
 }
 
 // ---------------------------------------------------------------------------
@@ -2730,12 +2733,12 @@ function computeFullPanchanga(params) {
                                    longitude, latitude, tzHr, tzMin);
 
     // Compute sunrise using the integer day
-    const { sunriseIST, sunsetIST } = computeSunrise(dateInfo.j2000DaysInt, dateInfo);
+    const { sunriseUT, sunsetUT } = computeSunrise(dateInfo.j2000DaysInt, dateInfo);
 
     // Determine which J2000 day to use
     let queryDay = dateInfo.j2000Day;
     if (useSunrise) {
-        queryDay = dateInfo.j2000DaysInt + (sunriseIST - 5.5) / 24.0;
+        queryDay = dateInfo.j2000DaysInt + sunriseUT / 24.0;
     }
 
     // Compute Panchanga at query time
@@ -2745,7 +2748,7 @@ function computeFullPanchanga(params) {
     });
     // Recalculate utHours for sunrise mode
     if (useSunrise) {
-        dateInfoQuery.utHours = sunriseIST - 5.5;  // convert IST to UT
+        dateInfoQuery.utHours = sunriseUT;
     }
 
     let state = computePanchanga(queryDay, dateInfoQuery);
@@ -2755,10 +2758,10 @@ function computeFullPanchanga(params) {
     // the tithi at sunrise, not at an arbitrary query time.  This prevents the
     // same festival firing on two consecutive calendar days simply because a
     // long tithi straddles midnight.
-    const sunriseJ2000   = dateInfo.j2000DaysInt + (sunriseIST - 5.5) / 24.0;
+    const sunriseJ2000   = dateInfo.j2000DaysInt + sunriseUT / 24.0;
     const sunriseDateInfo = Object.assign({}, dateInfo, {
         j2000Day: sunriseJ2000,
-        utHours:  sunriseIST - 5.5
+        utHours:  sunriseUT
     });
     const sunriseState = computePanchanga(sunriseJ2000, sunriseDateInfo);
 
@@ -3355,12 +3358,15 @@ function computeFullPanchanga(params) {
         navamsha:planetNavamsha(g.lon)
     }));
 
-    // Format sunrise/sunset
-    let srHr  = Math.trunc(sunriseIST);
-    let srMin = Math.round((sunriseIST - srHr) * 60);
+    // Format sunrise/sunset in observer's local time
+    const tzOffsetHours = dateInfo.tzFracDay * 24.0;
+    const sunriseLocal = sunriseUT + tzOffsetHours;
+    const sunsetLocal  = sunsetUT  + tzOffsetHours;
+    let srHr  = Math.trunc(sunriseLocal);
+    let srMin = Math.round((sunriseLocal - srHr) * 60);
     if (srMin === 60) { srHr += 1; srMin = 0; }
-    let ssHr  = Math.trunc(sunsetIST);
-    let ssMin = Math.round((sunsetIST - ssHr) * 60);
+    let ssHr  = Math.trunc(sunsetLocal);
+    let ssMin = Math.round((sunsetLocal - ssHr) * 60);
     if (ssMin === 60) { ssHr += 1; ssMin = 0; }
 
     return {
@@ -3399,9 +3405,9 @@ function computeFullPanchanga(params) {
         lagna:         RASHI_NAMES[lagnaRashi - 1] || '',
         navamshaLagna: RASHI_NAMES[navamshaIdx > 0 ? navamshaIdx - 1 : 11] || '',
 
-        // Sunrise/Sunset
-        sunriseIST: `${srHr}:${String(srMin).padStart(2,'0')}`,
-        sunsetIST:  `${ssHr}:${String(ssMin).padStart(2,'0')}`,
+        // Sunrise/Sunset (observer's local time)
+        sunriseLocal: `${srHr}:${String(srMin).padStart(2,'0')}`,
+        sunsetLocal:  `${ssHr}:${String(ssMin).padStart(2,'0')}`,
 
         // Graha positions
         grahas,
@@ -3433,6 +3439,18 @@ const CITY_COORDS = {
   '37.7799,-121.9780':  [ 37.7799, -121.9780],
   '50.7753,6.0839':    [ 50.7753,    6.0839],
   '-33.8623,151.2077': [-33.8623,  151.2077]
+};
+
+// Fixed standard timezone offsets (hours, minutes) for each preset city.
+// These are standard (non-DST) offsets; DST is not modelled by the engine.
+const CITY_TZ = {
+  '12.9716,77.5946':   [5,  30],  // IST UTC+5:30
+  '12.2958,76.6394':   [5,  30],  // IST UTC+5:30
+  '13.0033,76.1004':   [5,  30],  // IST UTC+5:30
+  '16.8524,74.5815':   [5,  30],  // IST UTC+5:30
+  '37.7799,-121.9780': [-8,  0],  // PST UTC-8
+  '50.7753,6.0839':    [1,   0],  // CET UTC+1
+  '-33.8623,151.2077': [11,  0],  // AEDT UTC+11 (fixed)
 };
 
 const DAY_NAMES  = ['ಭಾನುವಾರ','ಸೋಮವಾರ','ಮಂಗಳವಾರ','ಬುಧವಾರ','ಗುರುವಾರ','ಶುಕ್ರವಾರ','ಶನಿವಾರ'];
@@ -3516,6 +3534,15 @@ function calculateFestivals() {
     locationLabel = document.querySelector(`#inputCity option[value="${cityVal}"]`).textContent.trim();
   }
 
+  // Determine timezone offset for the selected location.
+  let tzHr, tzMin;
+  if (cityVal !== 'custom' && CITY_TZ[cityVal]) {
+    [tzHr, tzMin] = CITY_TZ[cityVal];
+  } else {
+    tzHr  = Math.round(lon / 15);
+    tzMin = 0;
+  }
+
   const spinnerWrap = document.getElementById('spinnerWrap');
   const calcBtn     = document.getElementById('calcBtn');
   spinnerWrap.classList.add('visible');
@@ -3525,7 +3552,7 @@ function calculateFestivals() {
   // Run asynchronously so the spinner is visible
   setTimeout(() => {
     try {
-      const festivals = scanYearForFestivals(yearVal, lat, lon);
+      const festivals = scanYearForFestivals(yearVal, lat, lon, tzHr, tzMin);
       renderFestivalTable(festivals, yearVal, locationLabel);
     } catch (err) {
       console.error(err);
@@ -3540,9 +3567,8 @@ function calculateFestivals() {
 // -----------------------------------------------------------------------
 // Scan every day of the year and collect festivals
 // -----------------------------------------------------------------------
-function scanYearForFestivals(year, lat, lon) {
+function scanYearForFestivals(year, lat, lon, tzHr, tzMin) {
   const results = [];
-  const tzHr = 5, tzMin = 30; // IST by default; engine uses IST internally
 
   for (let m = 1; m <= 12; m++) {
     const days = daysInMonth(m, year);
@@ -3554,7 +3580,9 @@ function scanYearForFestivals(year, lat, lon) {
           localHour: 6, localMin: 0,   // 6 AM — near sunrise, engine will use sunrise-based tithi
           useSunrise: true,
           latitude:  lat,
-          longitude: lon
+          longitude: lon,
+          tzHr,
+          tzMin,
         });
       } catch (e) {
         continue;
